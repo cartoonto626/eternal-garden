@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Eternal Garden: Primeval</title>
+    <title>Eternal Garden: Primeval Diversity</title>
     <style>
         :root { --accent: #00ffcc; --bg: #000; }
         body { margin: 0; background: var(--bg); color: #fff; overflow: hidden; font-family: 'Inter', sans-serif; touch-action: none; }
-        canvas { display: block; filter: contrast(1.2) brightness(1.2); }
+        canvas { display: block; filter: contrast(1.2) brightness(1.1); }
 
-        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; transition: 1.5s cubic-bezier(0.19, 1, 0.22, 1); text-align: center; padding: 0 40px; box-sizing: border-box; }
+        /* UI復元（日英併記・機能維持） */
+        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; transition: 1.5s; text-align: center; padding: 0 40px; box-sizing: border-box; }
         .hidden { opacity: 0; visibility: hidden; pointer-events: none; transform: scale(1.1); }
         .logo-dot { width: 2px; height: 2px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 20px var(--accent); animation: pulse-dot 3s infinite; margin-bottom: 30px; }
         .slide-content h2 { font-size: 14px; letter-spacing: 12px; font-weight: 300; color: var(--accent); margin-bottom: 25px; text-transform: uppercase; }
@@ -26,7 +27,6 @@
         .icon-btn { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.04); border: 0.5px solid rgba(255,255,255,0.12); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; backdrop-filter: blur(10px); }
 
         #rebirth-btn { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); border: 1px solid var(--accent); color: var(--accent); padding: 16px 50px; border-radius: 40px; font-size: 11px; font-weight: 800; letter-spacing: 6px; display: none; z-index: 100; }
-
         @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(5); opacity: 1; } }
     </style>
 </head>
@@ -60,8 +60,8 @@
 </div>
 
 <div id="side-ui" class="side-controls">
-    <button class="icon-btn" onclick="mutateColor()">+</button>
-    <button class="icon-btn" onclick="mutateForm()">⬢</button>
+    <button class="icon-btn" onclick="flash()">+</button>
+    <button class="icon-btn" onclick="mutateBase()">⬢</button>
     <button class="icon-btn" onclick="share()">↑</button>
     <button class="icon-btn" onclick="location.reload()">↺</button>
 </div>
@@ -80,14 +80,14 @@
 
     function generateDNA() {
         dna = {
-            style: Math.floor(Math.random() * 5), // 0:Tree, 1:Mandala, 2:Constellation, 3:Vortex, 4:Circuit
-            angle: 15 + Math.random() * 60,
-            shrink: 0.6 + Math.random() * 0.25,
-            sway: 0.2 + Math.random() * 1.5,
-            thickness: 0.8 + Math.random() * 2.0,
+            baseType: Math.floor(Math.random() * 5), // 母体そのものを5種からランダム
+            angle: 15 + Math.random() * 75,
+            shrink: 0.5 + Math.random() * 0.35,
+            sway: Math.random() * 1.5,
             color: typeColors[Math.floor(Math.random() * typeColors.length)],
-            complexity: 1.5 + Math.random() * 1.5,
-            asym: (Math.random() - 0.5) * 20
+            thickness: 0.5 + Math.random() * 2.5,
+            sides: 3 + Math.floor(Math.random() * 5), // 放射状の時の数
+            complexity: 1.2 + Math.random() * 1.8
         };
         document.documentElement.style.setProperty('--accent', dna.color);
     }
@@ -96,8 +96,8 @@
     function showSlide(n) { document.querySelectorAll('.overlay-layer').forEach(el => el.classList.add('hidden')); if(n === 1) document.getElementById('slide1').classList.remove('hidden'); if(n === 2) document.getElementById('slide2').classList.remove('hidden'); }
     function startGame() { document.getElementById('slide2').classList.add('hidden'); gameStarted = true; setTimeout(() => { statusUi.style.opacity = sideUi.style.opacity = "1"; }, 500); }
 
-    function mutateColor() { dna.color = typeColors[Math.floor(Math.random() * typeColors.length)]; document.documentElement.style.setProperty('--accent', dna.color); }
-    function mutateForm() { dna.style = (dna.style + 1) % 5; updateUI(); }
+    function flash() { ctx.fillStyle = dna.color; ctx.globalAlpha = 0.2; ctx.fillRect(0,0,w,h); ctx.globalAlpha = 1; }
+    function mutateBase() { dna.baseType = (dna.baseType + 1) % 5; updateUI(); }
     function share() { if(navigator.share) navigator.share({title:'Eternal Garden', url:location.href}); }
 
     window.addEventListener('touchstart', e => {
@@ -110,49 +110,52 @@
     });
 
     function updateUI() {
-        metaInfo.innerText = `G.${rebirth + 1} / S.${level} (BUFF x${(1 + rebirth * 0.5).toFixed(1)})`;
+        metaInfo.innerText = `G.${rebirth + 1} / S.${level}`;
         titleText.innerText = names[Math.min(9, Math.floor((level-1)/2))].toUpperCase();
         rebirthBtn.style.display = level >= 20 ? 'block' : 'none';
     }
 
     function triggerRebirth() { rebirth++; level = 1; exp = 0; generateDNA(); updateUI(); }
 
-    function drawFragment(len, depth, maxD) {
-        const s = dna.style;
+    function drawElement(len, depth, maxD) {
         ctx.beginPath();
-        ctx.lineWidth = Math.max(0.4, (dna.thickness * (1 - depth/maxD)) + (level/30));
         ctx.strokeStyle = dna.color;
-        ctx.globalAlpha = Math.max(0.1, 1 - (depth / maxD));
+        ctx.lineWidth = Math.max(0.3, dna.thickness * (1 - depth/maxD) + (level/40));
+        ctx.globalAlpha = Math.max(0.1, 1 - (depth/maxD));
 
-        if (s === 4) { // Circuit
-            ctx.moveTo(0, 0); ctx.lineTo(0, -len/2); ctx.lineTo(len/4, -len/2); ctx.lineTo(len/4, -len);
-        } else if (s === 2) { // Constellation
-            ctx.arc(0, -len, 1, 0, 7); ctx.stroke(); ctx.moveTo(0,0); ctx.lineTo(0, -len);
-        } else if (s === 1) { // Mandala
+        const bt = dna.baseType;
+        if (bt === 1) { // Radial Mandala
+            ctx.arc(0, -len/2, len/2.5, 0, 7);
+        } else if (bt === 2) { // Chain link
             ctx.rect(-len/4, -len/4, len/2, len/2);
-        } else { // Tree / Vortex
-            ctx.moveTo(0, 0); ctx.quadraticCurveTo(dna.asym, -len/2, 0, -len);
+            ctx.moveTo(0,0); ctx.lineTo(0,-len);
+        } else if (bt === 3) { // Grid Circuit
+            ctx.moveTo(0,0); ctx.lineTo(0, -len/2); ctx.lineTo(len/3, -len/2); ctx.lineTo(len/3, -len);
+        } else { // Classic Tree or Fluid
+            ctx.moveTo(0,0);
+            if(bt === 4) ctx.bezierCurveTo(len, -len/3, -len, -len*2/3, 0, -len);
+            else ctx.lineTo(0, -len);
         }
         ctx.stroke();
     }
 
-    function drawEvolution(len, angle, depth) {
-        const maxDepth = Math.min(12, Math.floor(level / dna.complexity) + 1);
-        if (depth > maxDepth) return;
+    function grow(len, angle, depth) {
+        const maxD = Math.min(11, Math.floor(level / dna.complexity) + 1);
+        if (depth > maxD) return;
 
-        drawFragment(len, depth, maxDepth);
+        drawElement(len, depth, maxD);
 
         ctx.save();
         ctx.translate(0, -len);
         const sway = Math.sin(time + depth) * dna.sway;
         const nextLen = len * dna.shrink;
 
-        const branches = (dna.style === 1) ? 4 : 2; // Mandala is 4-way
+        const branches = (dna.baseType === 1 && depth === 0) ? dna.sides : 2;
         for (let i = 0; i < branches; i++) {
             ctx.save();
-            let rot = (dna.style === 1) ? (i * 90) : (i === 0 ? -angle : angle);
+            let rot = (branches > 2) ? (i * (360/branches)) : (i === 0 ? -angle : angle);
             ctx.rotate((rot + sway) * Math.PI / 180);
-            drawEvolution(nextLen, angle, depth + 1);
+            grow(nextLen, angle, depth + 1);
             ctx.restore();
         }
         ctx.restore();
@@ -162,12 +165,13 @@
         time = Date.now() * 0.002;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         if(gameStarted) {
-            let baseLen = (level === 1) ? 2 : 10 + (level * 8);
+            let baseLen = (level === 1) ? 2 : 12 + (level * 8);
             const scale = Math.min(1.0, (h * 0.6) / (baseLen * 2.5));
             ctx.save();
-            ctx.translate(w/2, (dna.style === 1) ? h/2 : h - 140);
-            if (dna.style === 3) ctx.rotate(time * 0.2); // Vortex rotates
-            drawEvolution(baseLen * scale, dna.angle, 0);
+            // 放射状の場合は中央、それ以外は下部
+            const centerY = (dna.baseType === 1) ? h/2 : h - 140;
+            ctx.translate(w/2, centerY);
+            grow(baseLen * scale, dna.angle, 0);
             ctx.restore();
         }
         requestAnimationFrame(render);
