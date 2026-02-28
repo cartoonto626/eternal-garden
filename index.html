@@ -3,35 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Eternal Garden: Infinity Genesis</title>
+    <title>Eternal Garden: True Genesis</title>
     <style>
         :root { --accent: #00ffcc; --bg: #000; }
         body { margin: 0; background: var(--bg); color: #fff; overflow: hidden; font-family: 'Inter', sans-serif; touch-action: none; }
-        canvas { display: block; filter: contrast(1.2) brightness(1.2) drop-shadow(0 0 5px var(--accent)); }
+        canvas { display: block; }
 
-        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; transition: 1.2s; text-align: center; padding: 0 40px; box-sizing: border-box; }
-        .hidden { opacity: 0; visibility: hidden; pointer-events: none; transform: scale(1.1); }
-        .logo-dot { width: 2px; height: 2px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); animation: pulse-dot 3s infinite; margin-bottom: 30px; }
-        .slide-content h2 { font-size: 13px; letter-spacing: 10px; color: var(--accent); margin-bottom: 25px; text-transform: uppercase; font-weight: 200; }
-        .slide-content p { font-size: 11px; line-height: 2.2; opacity: 0.6; margin: 0; letter-spacing: 0.1em; }
+        /* スタート画面（監督お気に入りのスタイルを維持） */
+        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; transition: 1s cubic-bezier(0.4, 0, 0.2, 1); text-align: center; padding: 0 40px; box-sizing: border-box; }
+        .hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .logo-dot { width: 2px; height: 2px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 15px var(--accent); animation: pulse-dot 3s infinite; margin-bottom: 30px; }
+        .slide-content h2 { font-size: 13px; letter-spacing: 10px; font-weight: 200; color: var(--accent); margin-bottom: 25px; text-transform: uppercase; }
+        .slide-content p { font-size: 11px; line-height: 2.2; opacity: 0.6; font-weight: 300; margin: 0; letter-spacing: 0.1em; }
         .tap-hint { margin-top: 60px; font-size: 8px; letter-spacing: 5px; opacity: 0.3; animation: blink 3s infinite; }
 
-        .status-bar { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); padding: 10px 24px; border-radius: 40px; border: 0.5px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 15px; min-width: 260px; z-index: 100; opacity: 0; transition: 1.5s; }
-        #title { font-size: 11px; letter-spacing: 5px; font-weight: 800; text-transform: uppercase; }
-        .exp-container { flex-grow: 1; height: 1px; background: rgba(255,255,255,0.1); position: relative; }
-        #exp-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); box-shadow: 0 0 10px var(--accent); transition: width 0.2s; }
+        /* ステータスバー（倍率を復活） */
+        .status-bar { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 12px 28px; border-radius: 40px; border: 0.5px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; min-width: 220px; z-index: 100; opacity: 0; transition: 1s; }
+        #meta-info { font-size: 8px; letter-spacing: 2px; color: var(--accent); margin-bottom: 4px; font-weight: 600; }
+        #title { font-size: 12px; letter-spacing: 6px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+        .exp-container { width: 100%; height: 1px; background: rgba(255,255,255,0.1); position: relative; }
+        #exp-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); box-shadow: 0 0 10px var(--accent); transition: width 0.3s; }
 
-        .side-controls { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 20px; z-index: 100; opacity: 0; transition: 1.5s; }
-        .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.03); backdrop-filter: blur(10px); border: 0.5px solid rgba(255,255,255,0.1); color: #fff; font-size: 14px; display: flex; align-items: center; justify-content: center; }
-        
-        #rebirth-btn { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: none; border: 1px solid var(--accent); color: var(--accent); padding: 12px 40px; border-radius: 30px; font-size: 9px; font-weight: 800; letter-spacing: 4px; display: none; z-index: 100; }
+        /* サイドボタン */
+        .side-controls { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 20px; z-index: 100; opacity: 0; transition: 1s; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 0.5px solid rgba(255,255,255,0.1); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; }
 
-        #gallery-page { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); backdrop-filter: blur(40px); z-index: 4000; display: none; flex-direction: column; align-items: center; padding: 100px 30px; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; max-height: 60vh; overflow-y: auto; }
-        .gallery-item { aspect-ratio: 1; border: 0.5px solid rgba(255,255,255,0.1); background-size: cover; background-position: center; }
+        #rebirth-btn { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: none; border: 1px solid var(--accent); color: var(--accent); padding: 12px 40px; border-radius: 30px; font-size: 10px; font-weight: 800; letter-spacing: 4px; display: none; z-index: 100; }
 
-        @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(4); opacity: 1; } }
-        @keyframes blink { 0%, 100% { opacity: 0.1; } 50% { opacity: 0.4; } }
+        @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(3); opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
@@ -46,7 +46,6 @@
     <div class="slide-content">
         <h2>Genesis / 起源</h2>
         <p>虚空に舞い降りた、一粒の光。<br>あなたの指先が、静寂を幾何学に変える。</p>
-        <p style="font-size:8px; opacity:0.3; margin-top:15px;">A single point in the void.<br>Geometry born from your touch.</p>
     </div>
     <div class="tap-hint">NEXT</div>
 </div>
@@ -54,34 +53,23 @@
 <div id="slide2" class="overlay-layer hidden" onclick="startGame()">
     <div class="slide-content">
         <h2>System / 共生</h2>
-        <p>育ち、記録し、また昇華する。<br>二度と同じ形のない、一期一会の電脳庭園へ。</p>
-        <p style="font-size:8px; opacity:0.3; margin-top:15px;">Grow, record, and sublimate.<br>A garden of fleeting digital life.</p>
+        <p>育ち、記録し、また昇華する。<br>二度と同じ形のない、一期一会の庭園へ。</p>
     </div>
     <div class="tap-hint">BEGIN</div>
 </div>
 
 <div id="status-ui" class="status-bar">
-    <div class="status-main">
-        <div id="meta-info" style="font-size:7px; color:var(--accent); letter-spacing:1px;">GEN.1 / STG.1</div>
-        <div id="title">SINGULARITY</div>
-    </div>
+    <div id="meta-info">G.1 / S.1 (BUFF x1.0)</div>
+    <div id="title">SEED</div>
     <div class="exp-container"><div id="exp-fill"></div></div>
 </div>
 
 <div id="side-ui" class="side-controls">
-    <button id="add-btn" class="icon-btn" onclick="addToCollection()">+</button>
-    <button class="icon-btn" onclick="toggleGallery()">𖡼</button>
-    <button class="icon-btn" onclick="shareCanvas()">↑</button>
+    <button class="icon-btn" onclick="addToCollection()" style="color:var(--accent)">+</button>
     <button class="icon-btn" onclick="location.reload()">↺</button>
 </div>
 
 <button id="rebirth-btn" onclick="triggerRebirth()">SUBLIMATE / 昇華</button>
-
-<div id="gallery-page">
-    <div style="font-size:8px; letter-spacing:10px; margin-bottom:40px; opacity:0.3;">ARCHIVE</div>
-    <div class="gallery-grid" id="gallery-grid"></div>
-    <button style="margin-top:50px; background:none; border:0.5px solid rgba(255,255,255,0.2); color:#fff; padding:10px 30px; border-radius:20px; font-size:9px;" onclick="toggleGallery()">CLOSE</button>
-</div>
 
 <canvas id="canvas"></canvas>
 
@@ -89,114 +77,105 @@
     const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
     const expFill = document.getElementById('exp-fill'), titleText = document.getElementById('title'), metaInfo = document.getElementById('meta-info');
     const rebirthBtn = document.getElementById('rebirth-btn'), statusUi = document.getElementById('status-ui'), sideUi = document.getElementById('side-ui');
-    const galleryPage = document.getElementById('gallery-page'), galleryGrid = document.getElementById('gallery-grid');
 
-    let w, h, time = 0, exp = 0, level = 1, rebirth = 0, dna = {}, gameStarted = false;
-    let flash = 0;
-    const evolutionNames = ["Singularity", "Pulse", "Sprout", "Circuit", "Bonsai", "Radiant", "Ancient", "Galaxy", "Void", "Eternal"];
+    let w, h, time = 0, exp = 0, level = 1, rebirth = 0, dna = {}, gameStarted = false, scanEffect = 0;
     const typeColors = ['#00ffcc', '#ff00ff', '#00ff88', '#ffff00', '#ff4d4d', '#4d79ff', '#ffffff'];
+    const names = ["Seed", "Pulse", "Sprout", "Bloom", "Network", "Radiant", "Ancient", "Galaxy", "Dimension", "Eternal"];
 
-    function generateUniqueDNA() {
-        const s = Date.now() + Math.random();
+    function generateDNA() {
+        const s = Math.random() * 1000;
         dna = {
-            angle: 20 + Math.random() * 50,
-            shrink: 0.72 + Math.random() * 0.08,
-            sway: 0.8 + Math.random() * 2,
-            type: Math.floor(Math.random() * 5),
+            angle: 15 + Math.random() * 45,
+            shrink: 0.65 + Math.random() * 0.12,
+            sway: 0.5 + Math.random() * 1.5,
+            thickness: 1 + Math.random() * 2,
             color: typeColors[Math.floor(Math.random() * typeColors.length)],
-            leafColor: '#fff',
-            thickness: 1.5 + Math.random() * 3,
-            tilt: (Math.random() - 0.5) * 6
+            randomness: Math.random() * 5
         };
         document.documentElement.style.setProperty('--accent', dna.color);
     }
 
-    function init() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; generateUniqueDNA(); }
+    function init() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; generateDNA(); }
     function showSlide(n) {
-        document.getElementById('overlay').classList.add('hidden');
-        document.getElementById('slide1').classList.add('hidden');
-        document.getElementById('slide2').classList.add('hidden');
+        document.querySelectorAll('.overlay-layer').forEach(el => el.classList.add('hidden'));
         if(n === 1) document.getElementById('slide1').classList.remove('hidden');
         if(n === 2) document.getElementById('slide2').classList.remove('hidden');
     }
     function startGame() { document.getElementById('slide2').classList.add('hidden'); gameStarted = true; setTimeout(() => { statusUi.style.opacity = sideUi.style.opacity = "1"; }, 500); }
 
     window.addEventListener('touchstart', e => {
-        if(!gameStarted || galleryPage.style.display === 'flex' || e.target.closest('button')) return;
-        flash = 1.0; // 成長フラッシュ
+        if(!gameStarted || e.target.closest('button')) return;
+        scanEffect = 1.0;
         if(level < 20) {
-            exp += (50 / (1 + level * 0.1)); // 成長速度の最適化
+            exp += (60 / Math.pow(level, 0.4)) * (1 + rebirth * 0.5);
             if(exp >= 100) { level++; exp = 0; updateUI(); }
             expFill.style.width = exp + '%';
         }
     });
 
     function updateUI() {
-        metaInfo.innerText = `GEN.${rebirth + 1} / STG.${level}`;
-        titleText.innerText = evolutionNames[Math.min(9, Math.floor((level-1)/2))];
+        metaInfo.innerText = `G.${rebirth + 1} / S.${level} (BUFF x${(1 + rebirth * 0.5).toFixed(1)})`;
+        titleText.innerText = names[Math.min(9, Math.floor((level-1)/2))].toUpperCase();
         rebirthBtn.style.display = level >= 20 ? 'block' : 'none';
     }
 
-    function triggerRebirth() { rebirth++; level = 1; exp = 0; generateUniqueDNA(); updateUI(); }
-    function toggleGallery() { galleryPage.style.display = galleryPage.style.display === 'flex' ? 'none' : 'flex'; }
-    function addToCollection() {
-        const item = document.createElement('div'); item.className = 'gallery-item';
-        item.style.backgroundImage = `url(${canvas.toDataURL('image/png', 0.2)})`;
-        const d = JSON.parse(JSON.stringify(dna));
-        item.onclick = () => { dna = d; document.documentElement.style.setProperty('--accent', dna.color); toggleGallery(); };
-        galleryGrid.insertBefore(item, galleryGrid.firstChild);
-    }
-    function shareCanvas() { const l = document.createElement('a'); l.download = `Garden.png`; l.href = canvas.toDataURL(); l.click(); }
+    function triggerRebirth() { rebirth++; level = 1; exp = 0; generateDNA(); updateUI(); }
 
-    function drawShape(len) {
-        const s = len * 0.3;
-        if (dna.type === 1) ctx.arc(0, -len/2, len/2, 0, Math.PI*2);
-        else if (dna.type === 2) { ctx.moveTo(0, -len); ctx.lineTo(s, 0); ctx.lineTo(-s, 0); ctx.closePath(); }
-        else if (dna.type === 3) ctx.rect(-s/2, -len, s, s);
-        else if (dna.type === 4) { for(let i=0; i<6; i++) ctx.lineTo(s * Math.cos(i*Math.PI/3), -len + s * Math.sin(i*Math.PI/3)); ctx.closePath(); }
-        else { ctx.moveTo(0, 0); ctx.lineTo(0, -len); }
-    }
+    function drawBranch(len, depth) {
+        // レベルに応じて「再帰の深さ」を制限し、初期を小さく保つ
+        const maxDepth = Math.min(depth, Math.floor(level / 1.8) + 1);
+        if (depth > maxDepth || depth > 12) return;
 
-    function drawTree(len, angle, depth) {
-        // 深さの限界を制御しつつ、高レベルでは線の太さと光で成長を表現
-        const maxD = Math.min(10, Math.floor(level / 2) + 2);
-        if (depth > maxD) return;
-
-        ctx.save();
-        ctx.rotate(angle * Math.PI / 180);
         ctx.beginPath();
-        
-        // 成長フラッシュとレベルに応じた太さ
-        const growEffect = flash * 2;
-        ctx.lineWidth = Math.max(0.4, (dna.thickness + growEffect + (level/10)) * (1 - depth/maxD));
-        ctx.strokeStyle = (depth > maxD - 1) ? dna.leafColor : dna.color;
-        ctx.globalAlpha = Math.max(0.1, 1 - (depth / (maxD + 2)));
-        
-        drawShape(len);
+        ctx.lineWidth = Math.max(0.2, (dna.thickness * (1 - depth/maxDepth)) + (scanEffect * 2));
+        ctx.strokeStyle = dna.color;
+        ctx.globalAlpha = Math.max(0.1, 1 - (depth / 13));
+
+        // ステージ1なら「粒」、それ以外なら「線」
+        if(level === 1 && depth === 0) {
+            ctx.rect(-1, -1, 2, 2);
+        } else {
+            ctx.moveTo(0, 0); ctx.lineTo(0, -len);
+        }
         ctx.stroke();
 
-        const s = Math.sin(time + depth) * dna.sway;
-        drawTree(len * dna.shrink, dna.angle + s, depth + 1);
-        drawTree(len * dna.shrink, -dna.angle + s, depth + 1);
+        ctx.save();
+        ctx.translate(0, -len);
+        
+        const noise = Math.sin(time + depth) * dna.randomness;
+        const angle = (dna.angle + noise) * Math.PI / 180;
+        const nextLen = len * dna.shrink;
+
+        // 右の枝
+        ctx.save(); ctx.rotate(angle); drawBranch(nextLen, depth + 1); ctx.restore();
+        // 左の枝
+        ctx.save(); ctx.rotate(-angle); drawBranch(nextLen, depth + 1); ctx.restore();
+        
         ctx.restore();
     }
 
     function render() {
-        time = Date.now() * 0.0015;
+        time = Date.now() * 0.002;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         
         if(gameStarted) {
-            // ステージ1は「1px」の極小から
-            const baseLen = (h / 100) + (level * 12);
-            // どんなサイズでも画面の70%に収める完璧なスケーリング
-            const autoScale = Math.min(1, (h * 0.7) / (baseLen * 2.5));
+            // ステージ1のサイズを「2px」レベルへ。レベルが上がるほどベースも育つ
+            const baseLen = (level === 1) ? 2 : 10 + (level * 8);
+            // 常に画面に収まるよう調整。ただしステージ1では拡大せず「粒」を維持
+            const autoScale = (level === 1) ? 1 : Math.min(1.2, (h * 0.6) / (baseLen * 3));
             
             ctx.save();
-            ctx.translate(w/2, h - 100);
-            drawTree(baseLen * autoScale, dna.tilt, 0);
+            ctx.translate(w/2, h - 120);
+            drawBranch(baseLen * autoScale, 0);
             ctx.restore();
 
-            if(flash > 0) flash -= 0.05;
+            // 近未来スキャンライン
+            if(scanEffect > 0) {
+                ctx.strokeStyle = dna.color; ctx.lineWidth = 0.5; ctx.globalAlpha = scanEffect * 0.3;
+                const lineY = h - 120 - (scanEffect * h * 0.5);
+                ctx.beginPath(); ctx.moveTo(0, lineY); ctx.lineTo(w, lineY); ctx.stroke();
+                scanEffect -= 0.03;
+            }
         }
         requestAnimationFrame(render);
     }
