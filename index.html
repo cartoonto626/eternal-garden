@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Eternal Garden: Infinite Seeds</title>
+    <title>Eternal Garden: Geometric Seeds</title>
     <style>
         :root { --accent: #00ffcc; --bg: #000; }
         body { margin: 0; background: var(--bg); color: #fff; overflow: hidden; font-family: 'Inter', sans-serif; touch-action: none; }
-        canvas { display: block; filter: contrast(1.1) brightness(1.2) saturate(1.2); }
+        canvas { display: block; filter: contrast(1.1) brightness(1.2); }
 
-        /* UI復元 & 洗練 */
+        /* UI復元 & 日英併記 */
         .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; transition: 1.5s; text-align: center; padding: 0 40px; box-sizing: border-box; }
         .hidden { opacity: 0; visibility: hidden; pointer-events: none; transform: scale(1.05); }
         .logo-dot { width: 2px; height: 2px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 20px var(--accent); animation: pulse-dot 3s infinite; margin-bottom: 30px; }
@@ -29,7 +29,6 @@
         #rebirth-btn { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); border: 1px solid var(--accent); color: var(--accent); padding: 16px 50px; border-radius: 40px; font-size: 11px; font-weight: 800; letter-spacing: 6px; display: none; z-index: 100; backdrop-filter: blur(10px); }
 
         @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(5); opacity: 1; } }
-        @keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.6; } }
     </style>
 </head>
 <body>
@@ -37,6 +36,7 @@
 <div id="overlay" class="overlay-layer" onclick="showSlide(1)">
     <div class="logo-dot"></div>
     <div style="font-size:11px; letter-spacing:14px; font-weight:200;">ETERNAL GARDEN</div>
+    <div style="font-size:8px; opacity:0.3; margin-top:20px; letter-spacing:5px;">TAP TO AWAKEN</div>
 </div>
 
 <div id="slide1" class="overlay-layer hidden" onclick="showSlide(2)">
@@ -62,8 +62,8 @@
 </div>
 
 <div id="side-ui" class="side-controls">
-    <button class="icon-btn" onclick="flashEffect()">+</button>
-    <button class="icon-btn" onclick="mutateDNA()">⬢</button>
+    <button class="icon-btn" onclick="effectTrigger()">+</button>
+    <button class="icon-btn" onclick="mutateStyle()">⬢</button>
     <button class="icon-btn" onclick="share()">↑</button>
     <button class="icon-btn" onclick="location.reload()">↺</button>
 </div>
@@ -81,33 +81,28 @@
     const names = ["Seed", "Pulse", "Sprout", "Bloom", "Network", "Radiant", "Ancient", "Galaxy", "Void", "Eternal"];
 
     function generateDNA() {
-        // 純粋なランダムではなく、互いに干渉し合う15以上のパラメータ
         dna = {
-            angle: 10 + Math.random() * 65,
-            shrink: 0.55 + Math.random() * 0.28,
-            sway: 0.2 + Math.random() * 1.8,
-            thickness: 1.0 + Math.random() * 2.5,
+            angle: 10 + Math.random() * 70,
+            shrink: 0.55 + Math.random() * 0.25,
+            sway: 0.1 + Math.random() * 1.5,
+            thickness: 1.0 + Math.random() * 2.0,
             color: typeColors[Math.floor(Math.random() * typeColors.length)],
-            curvature: (Math.random() - 0.5) * 15, // 枝の曲がり率
-            splitProb: Math.random(), // 分離の複雑さ
-            asym: (Math.random() - 0.5) * 20, // 非対称性
-            stepDiv: 1.5 + Math.random() * 1.5, // 成長テンポ
-            leafType: Math.floor(Math.random() * 5), // 0:None, 1:Circle, 2:Hex, 3:Star, 4:Dust
-            modFreq: 0.5 + Math.random() * 2 // 揺れの周期
+            // 幾何学パラメータ
+            geoMode: Math.floor(Math.random() * 6), // 0:Line, 1:Circle, 2:Hex, 3:Square, 4:Dot, 5:Grid
+            curviness: (Math.random() - 0.5) * 10,
+            asym: (Math.random() - 0.5) * 15,
+            jointSize: 0.5 + Math.random() * 3,
+            rarity: Math.random() > 0.9 ? 3 : 2 // 3分岐のレア度
         };
         document.documentElement.style.setProperty('--accent', dna.color);
     }
 
     function init() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; generateDNA(); }
-    function showSlide(n) {
-        document.querySelectorAll('.overlay-layer').forEach(el => el.classList.add('hidden'));
-        if(n === 1) document.getElementById('slide1').classList.remove('hidden');
-        if(n === 2) document.getElementById('slide2').classList.remove('hidden');
-    }
+    function showSlide(n) { document.querySelectorAll('.overlay-layer').forEach(el => el.classList.add('hidden')); if(n === 1) document.getElementById('slide1').classList.remove('hidden'); if(n === 2) document.getElementById('slide2').classList.remove('hidden'); }
     function startGame() { document.getElementById('slide2').classList.add('hidden'); gameStarted = true; setTimeout(() => { statusUi.style.opacity = sideUi.style.opacity = "1"; }, 500); }
 
-    function mutateDNA() { generateDNA(); updateUI(); }
-    function flashEffect() { ctx.fillStyle = dna.color; ctx.globalAlpha = 0.2; ctx.fillRect(0,0,w,h); ctx.globalAlpha = 1; }
+    function mutateStyle() { dna.geoMode = (dna.geoMode + 1) % 6; updateUI(); }
+    function effectTrigger() { ctx.fillStyle = "rgba(255,255,255,0.2)"; ctx.fillRect(0,0,w,h); }
     function share() { if(navigator.share) navigator.share({title:'Eternal Garden', url:location.href}); }
 
     window.addEventListener('touchstart', e => {
@@ -128,46 +123,49 @@
 
     function triggerRebirth() { rebirth++; level = 1; exp = 0; generateDNA(); updateUI(); }
 
-    function drawNode(len, depth, maxD) {
-        if (depth < maxD * 0.7) return;
-        const size = (maxD - depth) * 2;
-        ctx.beginPath();
-        if (dna.leafType === 1) ctx.arc(0, 0, size, 0, Math.PI*2);
-        else if (dna.leafType === 2) { for(let i=0; i<6; i++) ctx.lineTo(Math.cos(i*Math.PI/3)*size, Math.sin(i*Math.PI/3)*size); }
-        else if (dna.leafType === 4) { ctx.rect(-0.5, -0.5, 1, 1); ctx.globalAlpha *= 0.5; }
-        ctx.fill();
+    function drawPrimitive(len, depth) {
+        const m = dna.geoMode;
+        const s = dna.jointSize * (1 - depth/12);
+        
+        if (m === 1) { // Circle Chain
+            ctx.arc(0, -len/2, len/2, 0, Math.PI*2);
+        } else if (m === 2) { // Hex Crystal
+            for(let i=0; i<6; i++) ctx.lineTo(Math.cos(i*Math.PI/3)*len/2, -len/2 + Math.sin(i*Math.PI/3)*len/2);
+        } else if (m === 3) { // Square Grid
+            ctx.rect(-len/4, -len, len/2, len);
+        } else if (m === 4) { // Dotted Line
+            for(let i=0; i<5; i++) { ctx.moveTo(0, -len*(i/5)); ctx.arc(0, -len*(i/5), 0.5, 0, 7); }
+        } else if (m === 5) { // Cross
+            ctx.moveTo(-len/4, -len/2); ctx.lineTo(len/4, -len/2);
+            ctx.moveTo(0, 0); ctx.lineTo(0, -len);
+        } else { // Classic Organic
+            ctx.quadraticCurveTo(dna.curviness * depth, -len/2, 0, -len);
+        }
     }
 
     function drawTree(len, angle, depth) {
-        const maxDepth = Math.min(12, Math.floor(level / dna.stepDiv) + 1);
+        const maxDepth = Math.min(12, Math.floor(level / 1.7) + 1);
         if (depth > maxDepth) return;
 
         ctx.beginPath();
-        ctx.lineWidth = Math.max(0.3, (dna.thickness * (1 - depth/maxDepth)) + (level/30));
+        ctx.lineWidth = Math.max(0.3, (dna.thickness * (1 - depth/maxDepth)) + (level/35));
         ctx.strokeStyle = dna.color;
-        ctx.globalAlpha = Math.max(0.08, 1 - (depth / (maxDepth + 1)));
+        ctx.globalAlpha = Math.max(0.1, 1 - (depth / (maxDepth + 1)));
 
         if(level === 1 && depth === 0) {
-            ctx.arc(0, 0, 1.8, 0, Math.PI*2); ctx.fill();
+            ctx.arc(0, 0, 2, 0, Math.PI*2); ctx.fill();
         } else {
-            // 枝自体に「曲がり」を適用して有機的に
-            ctx.moveTo(0,0);
-            ctx.quadraticCurveTo(dna.curvature * depth, -len/2, 0, -len);
+            drawPrimitive(len, depth);
         }
         ctx.stroke();
 
-        drawNode(len, depth, maxDepth);
-
         ctx.save();
         ctx.translate(0, -len);
-        const sway = Math.sin(time * dna.modFreq + depth) * dna.sway;
+        const sway = Math.sin(time + depth) * dna.sway;
         const nextLen = len * dna.shrink;
 
-        // 分岐のランダム化
-        const branchCount = (dna.splitProb > 0.85 && depth < 3) ? 3 : 2;
-        const angles = branchCount === 3 ? [-angle, 0, angle] : [-angle, angle];
-
-        angles.forEach((a, i) => {
+        const branchAngles = (dna.rarity === 3 && depth < 2) ? [-angle, 0, angle] : [-angle, angle];
+        branchAngles.forEach((a, i) => {
             ctx.save();
             ctx.rotate((a + sway + (i === 0 ? -dna.asym : dna.asym)) * Math.PI / 180);
             drawTree(nextLen, angle, depth + 1);
@@ -180,13 +178,10 @@
         time = Date.now() * 0.0018;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         if(gameStarted) {
-            let baseLen = (level === 1) ? 2 : 10 + (level * 8);
-            // 数学的な収まり調整（緻密になっても画面内に収める）
-            const scale = (level < 3) ? 1 : Math.min(1.0, (h * 0.68) / (baseLen * 2.5));
-            
+            let baseLen = (level === 1) ? 2 : 12 + (level * 8);
+            const scale = (level < 3) ? 1 : Math.min(1.0, (h * 0.7) / (baseLen * 2.8));
             ctx.save();
             ctx.translate(w/2, h - 140);
-            ctx.lineCap = 'round';
             drawTree(baseLen * scale, dna.angle, 0);
             ctx.restore();
         }
