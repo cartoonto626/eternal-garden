@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-browser-capable" content="yes">
+    <meta name="apple-mobile-web-browser-status-bar-style" content="black-translucent">
+    <title>Eternal Garden Mobile</title>
+    <style>
+        :root { --accent: #00ffcc; }
+        body { 
+            margin: 0; background: #000; color: #fff; overflow: hidden; 
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+            touch-action: none; /* ズームやスクロールを無効化 */
+        }
+        canvas { display: block; }
+        
+        /* iPhoneのUI */
+        #ui { 
+            position: absolute; bottom: 40px; left: 0; width: 100%; 
+            text-align: center; pointer-events: none; z-index: 100;
+        }
+        .glass {
+            display: inline-block; background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            padding: 10px 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2);
+        }
+        h1 { margin: 0; font-size: 16px; letter-spacing: 2px; color: var(--accent); }
+        .hint { font-size: 10px; opacity: 0.6; margin-top: 4px; }
+        
+        /* 許可ボタン（iOSのセキュリティ対応） */
+        #permission-btn {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            padding: 20px; background: var(--accent); color: #000; border: none;
+            border-radius: 50px; font-weight: bold; z-index: 200; display: none;
+        }
+    </style>
+</head>
+<body>
+
+<button id="permission-btn">タップして庭園を開始</button>
+
+<div id="ui">
+    <div class="glass">
+        <h1>ETERNAL GARDEN</h1>
+        <div class="hint">傾けて風を送り、タップで季節を変える</div>
+    </div>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const btn = document.getElementById('permission-btn');
+    
+    let w, h, tilt = 0, season = 0;
+    const colors = [
+        ['#ffb7c5', '#ff99aa'], // 春
+        ['#2ecc71', '#27ae60'], // 夏
+        ['#e67e22', '#d35400'], // 秋
+        ['#ecf0f1', '#bdc3c7']  // 冬
+    ];
+
+    function init() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+    }
+
+    // iOSのジャイロセンサー許可リクエスト
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        btn.style.display = 'block';
+        btn.onclick = () => {
+            DeviceOrientationEvent.requestPermission()
+                .then(response => {
+                    if (response === 'granted') {
+                        window.addEventListener('deviceorientation', (e) => {
+                            tilt = e.gamma / 45; // 左右の傾きを取得
+                        });
+                        btn.style.display = 'none';
+                    }
+                });
+        };
+    } else {
+        // PCやAndroidなど
+        window.addEventListener('mousemove', (e) => {
+            tilt = (e.clientX / w - 0.5) * 2;
+        });
+    }
+
+    window.addEventListener('touchstart', (e) => {
+        season = (season + 1) % 4;
+    });
+
+    function drawTree(x, y, len, angle, width, depth) {
+        ctx.beginPath();
+        ctx.save();
+        ctx.strokeStyle = (depth > 8) ? colors[season][0] : '#3d2517';
+        ctx.lineWidth = width;
+        ctx.translate(x, y);
+        ctx.rotate(angle * Math.PI / 180);
+        ctx.moveTo(0, 0);
+        ctx.lineTo(0, -len);
+        ctx.stroke();
+
+        if (depth > 10) {
+            ctx.restore();
+            return;
+        }
+
+        const nextLen = len * 0.78;
+        const nextWidth = width * 0.7;
+        const windEffect = tilt * (depth * 2); // 深い枝ほど風の影響を受ける
+
+        drawTree(0, -len, nextLen, 20 + windEffect + Math.sin(Date.now()*0.002)*2, nextWidth, depth + 1);
+        drawTree(0, -len, nextLen, -25 + windEffect + Math.cos(Date.now()*0.002)*2, nextWidth, depth + 1);
+
+        ctx.restore();
+    }
+
+    function render() {
+        // 背景のグラデーション
+        const grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, '#000');
+        grad.addColorStop(1, '#111');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+
+        // 木の描画（iPhoneの画面サイズに合わせて調整）
+        drawTree(w/2, h - 80, h/6, 0, 8, 0);
+        
+        requestAnimationFrame(render);
+    }
+
+    window.addEventListener('resize', init);
+    init();
+    render();
+</script>
+</body>
+</html>
