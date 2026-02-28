@@ -1,7 +1,7 @@
 {
   "name": "Eternal Garden",
   "short_name": "Garden",
-  "start_url": "index.html",
+  "start_url": "icon.png.JPG",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#000000",
