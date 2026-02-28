@@ -9,19 +9,27 @@
     <style>
         :root { --accent: #00ffcc; }
         body { margin: 0; background: #000; color: #fff; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; touch-action: none; }
-        canvas { display: block; }
+        canvas { display: block; filter: contrast(1.2) brightness(1.2); }
 
-        /* スタート画面 */
+        /* スタート画面：幻想・幾何学強化 */
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 1000; transition: opacity 0.8s;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 1000; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
         #overlay.hidden { opacity: 0; visibility: hidden; }
-        .logo-circle { width: 40px; height: 40px; border: 1px solid var(--accent); border-radius: 50%; margin-bottom: 20px; animation: pulse 3s infinite; }
-        h0 { font-size: 14px; font-weight: 200; letter-spacing: 10px; color: var(--accent); text-transform: uppercase; }
+        
+        .logo-container { position: relative; margin-bottom: 50px; }
+        .logo-circle {
+            width: 100px; height: 100px; border: 1px solid var(--accent);
+            border-radius: 50%; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); animation: pulseLogos 4s infinite;
+        }
+        h0 { font-size: 24px; font-weight: 100; letter-spacing: 8px; margin: 0; color: var(--accent); text-shadow: 0 0 20px var(--accent); text-transform: uppercase; }
+        .start-hint { font-size: 10px; letter-spacing: 4px; opacity: 0.5; margin-top: 20px; animation: blink 2s infinite; color: #fff; text-transform: uppercase; }
 
-        /* 極細トップUI */
+        /* ゲームUI */
         #ui { position: absolute; top: 50px; left: 0; width: 100%; text-align: center; pointer-events: none; z-index: 100; opacity: 0; transition: opacity 1s; }
         #ui.visible { opacity: 1; }
         
@@ -46,14 +54,18 @@
 
         .tap-val { position: fixed; color: var(--accent); font-weight: 900; pointer-events: none; animation: floatUp 0.6s ease-out forwards; font-size: 20px; z-index: 500; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
         @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-60px) scale(1.2); opacity: 0; } }
-        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.1); opacity: 0.6; } }
+        @keyframes pulseLogos { 0%, 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.3; } 50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.6; } }
+        @keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.7; } }
     </style>
 </head>
 <body>
 
 <div id="overlay" onclick="startGame()">
-    <div class="logo-circle"></div>
-    <h0>Eternal Garden</h0>
+    <div class="logo-container">
+        <div class="logo-circle"></div>
+        <h0>Eternal Garden</h0>
+    </div>
+    <div class="start-hint">TAP TO ENTER</div>
 </div>
 
 <div id="ui">
@@ -73,14 +85,62 @@
     const rebirthBtn = document.getElementById('rebirth-btn'), overlay = document.getElementById('overlay'), ui = document.getElementById('ui');
 
     let w, h, time = 0, exp = 0, level = 1, rebirth = 0, gameStarted = false;
-    let stars = [], particles = [], dna = { angle: 22, shrink: 0.76, sway: 4, width: 10 };
+    let stars = [], particles = [], dna = { angle: 22, shrink: 0.76, sway: 4, width: 10, type: 0 }; // type: 0:線, 1:丸, 2:三角, 3:四角, 4:六角
 
     const evolutionNames = ["Seed", "Sprout", "Sapling", "Bonsai", "Radiant", "Bloom", "Ancient", "Galaxy", "Void", "Eternal"];
     const typeColors = ['#00ffcc', '#ff00ff', '#00ff88', '#ffff00', '#ffffff', '#ff4d4d', '#4d79ff'];
 
+    // 幾何学の星空（ジオ・スター）
+    class GeoStar {
+        constructor() { this.init(); }
+        init() {
+            this.x = Math.random() * w;
+            this.y = Math.random() * h;
+            this.z = Math.random() * w; // 遠近感用
+            this.size = Math.random() * 2 + 1;
+            this.type = Math.floor(Math.random() * 3); // 0:四角, 1:三角, 2:六角
+        }
+        update() {
+            this.z -= 1.5; // 手前に移動
+            if (this.z <= 0) this.init();
+        }
+        draw() {
+            let f = 100 / this.z;
+            let x = (this.x - w/2) * f + w/2;
+            let y = (this.y - h/2) * f + h/2;
+            let s = this.size * f;
+            let alpha = 1 - (this.z / w); // 遠くほど薄く
+
+            ctx.save();
+            ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.4})`;
+            ctx.translate(x, y);
+            ctx.rotate(this.z * 0.01); // 回転させる
+            ctx.beginPath();
+            if (this.type === 0) {
+                ctx.fillRect(-s/2, -s/2, s, s); // 正方形
+            } else if (this.type === 1) {
+                // 正三角形
+                ctx.moveTo(0, -s);
+                ctx.lineTo(s, s/2);
+                ctx.lineTo(-s, s/2);
+                ctx.closePath();
+                ctx.fill();
+            } else {
+                // 正六角形
+                for (let i = 0; i < 6; i++) {
+                    ctx.lineTo(s * Math.cos(i * Math.PI / 3), s * Math.sin(i * Math.PI / 3));
+                }
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+    }
+
     function init() {
         w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
-        stars = Array.from({length: 60}, () => ({ x: Math.random()*w, y: Math.random()*h, s: Math.random()*1, v: Math.random()*0.2 }));
+        // 幾何学の星空を生成
+        stars = Array.from({length: 100}, () => new GeoStar());
     }
 
     function startGame() { gameStarted = true; overlay.classList.add('hidden'); ui.classList.add('visible'); }
@@ -88,7 +148,7 @@
     window.addEventListener('touchstart', e => {
         if(!gameStarted || level >= 20) return;
         e.preventDefault();
-        const mult = 1 + (rebirth * 1.5); // 倍率をより分かりやすく強化
+        const mult = 1 + (rebirth * 1.5); // 倍率を強化
         const gain = (8 / Math.log2(level + 1.5)) * mult;
         grow(gain);
         const t = e.touches[0];
@@ -123,14 +183,42 @@
     function triggerRebirth() {
         rebirth++; level = 1; exp = 0;
         rebirthBtn.style.display = 'none';
-        // 転生時にDNAをランダム化（バリエーション）
+        // 転生時にDNAをランダム化 (バリエーション強化)
         dna.angle = 15 + Math.random() * 25;
         dna.sway = 2 + Math.random() * 8;
         dna.shrink = 0.72 + Math.random() * 0.08;
+        dna.type = Math.floor(Math.random() * 5); // 0:線, 1:丸, 2:三角, 3:四角, 4:六角
         updateUI();
     }
 
-    // 軽量化された描画ロジック
+    // 幾何学図形を描画する関数
+    function drawShape(ctx, depth, width, len) {
+        if (dna.type === 0) {
+            // 線 (従来通り)
+            ctx.moveTo(0, 0); ctx.lineTo(0, -len);
+        } else if (dna.type === 1) {
+            // 丸 (曲線)
+            ctx.arc(0, -len/2, len/2, Math.PI/2, Math.PI*1.5);
+        } else if (dna.type === 2) {
+            // 三角形 (正三角形)
+            ctx.moveTo(0, -len);
+            ctx.lineTo(len/2, 0);
+            ctx.lineTo(-len/2, 0);
+            ctx.closePath();
+        } else if (dna.type === 3) {
+            // 四角形 (正方形)
+            ctx.rect(-len/2, -len, len, len);
+        } else if (dna.type === 4) {
+            // 六角形 (正六角形)
+            ctx.moveTo(0, -len);
+            for(let i=0; i<6; i++) {
+                ctx.lineTo(len * Math.cos(i*Math.PI/3), -len * Math.sin(i*Math.PI/3));
+            }
+            ctx.closePath();
+        }
+    }
+
+    // 軽量化された幾何学描画ロジック
     function drawTree(x, y, len, angle, width, depth) {
         // 深さを制限して軽量化 (最大11段階に)
         if (depth > Math.min(level + 1, 11)) return;
@@ -144,7 +232,9 @@
         ctx.strokeStyle = (depth > level - 2) ? color : "#fff";
         ctx.lineWidth = width;
         ctx.globalAlpha = (1 - depth/14);
-        ctx.moveTo(0, 0); ctx.lineTo(0, -len);
+        
+        // 図形を描画
+        drawShape(ctx, depth, width, len);
         ctx.stroke();
 
         let s = dna.sway + Math.sin(time + depth) * 2;
@@ -157,10 +247,13 @@
     function render() {
         time = Date.now() * 0.0015;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+        
+        // 幾何学の星空を描画
         stars.forEach(s => {
-            ctx.fillStyle = "#fff"; ctx.globalAlpha = 0.3;
-            ctx.fillRect(s.x, s.y, s.s, s.s);
+            s.update();
+            s.draw();
         });
+
         if(gameStarted) {
             particles.forEach((p, i) => {
                 p.x += Math.cos(p.a)*p.s; p.y += Math.sin(p.a)*p.s; p.l -= 0.04;
