@@ -11,10 +11,10 @@
         body { margin: 0; background: #000; color: #fff; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; touch-action: none; }
         canvas { display: block; filter: contrast(1.2) brightness(1.2); }
 
-        /* スタート画面：幻想・幾何学強化 */
+        /* スタート画面：静寂と幻想 */
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            background: #000; /* 背景を静かな闇に */
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 1000; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -90,57 +90,10 @@
     const evolutionNames = ["Seed", "Sprout", "Sapling", "Bonsai", "Radiant", "Bloom", "Ancient", "Galaxy", "Void", "Eternal"];
     const typeColors = ['#00ffcc', '#ff00ff', '#00ff88', '#ffff00', '#ffffff', '#ff4d4d', '#4d79ff'];
 
-    // 幾何学の星空（ジオ・スター）
-    class GeoStar {
-        constructor() { this.init(); }
-        init() {
-            this.x = Math.random() * w;
-            this.y = Math.random() * h;
-            this.z = Math.random() * w; // 遠近感用
-            this.size = Math.random() * 2 + 1;
-            this.type = Math.floor(Math.random() * 3); // 0:四角, 1:三角, 2:六角
-        }
-        update() {
-            this.z -= 1.5; // 手前に移動
-            if (this.z <= 0) this.init();
-        }
-        draw() {
-            let f = 100 / this.z;
-            let x = (this.x - w/2) * f + w/2;
-            let y = (this.y - h/2) * f + h/2;
-            let s = this.size * f;
-            let alpha = 1 - (this.z / w); // 遠くほど薄く
-
-            ctx.save();
-            ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.4})`;
-            ctx.translate(x, y);
-            ctx.rotate(this.z * 0.01); // 回転させる
-            ctx.beginPath();
-            if (this.type === 0) {
-                ctx.fillRect(-s/2, -s/2, s, s); // 正方形
-            } else if (this.type === 1) {
-                // 正三角形
-                ctx.moveTo(0, -s);
-                ctx.lineTo(s, s/2);
-                ctx.lineTo(-s, s/2);
-                ctx.closePath();
-                ctx.fill();
-            } else {
-                // 正六角形
-                for (let i = 0; i < 6; i++) {
-                    ctx.lineTo(s * Math.cos(i * Math.PI / 3), s * Math.sin(i * Math.PI / 3));
-                }
-                ctx.closePath();
-                ctx.fill();
-            }
-            ctx.restore();
-        }
-    }
-
     function init() {
         w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
-        // 幾何学の星空を生成
-        stars = Array.from({length: 100}, () => new GeoStar());
+        // 背景の図形を削除し、静かな闇に
+        stars = Array.from({length: 60}, () => ({ x: Math.random()*w, y: Math.random()*h, s: Math.random()*1, v: Math.random()*0.2 }));
     }
 
     function startGame() { gameStarted = true; overlay.classList.add('hidden'); ui.classList.add('visible'); }
@@ -248,10 +201,10 @@
         time = Date.now() * 0.0015;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         
-        // 幾何学の星空を描画
+        // 静かな闇に浮かび上がる樹木を描画
         stars.forEach(s => {
-            s.update();
-            s.draw();
+            ctx.fillStyle = "#fff"; ctx.globalAlpha = 0.3;
+            ctx.fillRect(s.x, s.y, s.s, s.s);
         });
 
         if(gameStarted) {
