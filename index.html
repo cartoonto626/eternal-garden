@@ -3,131 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-browser-capable" content="yes">
-    <meta name="apple-mobile-web-browser-status-bar-style" content="black-translucent">
-    <title>Eternal Garden: Genesis</title>
+    <title>Eternal Garden: Archive</title>
     <style>
         :root { --accent: #00ffcc; }
-        body { margin: 0; background: #000; color: #fff; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; touch-action: none; }
-        canvas { display: block; filter: contrast(1.1) brightness(1.2); }
+        body { margin: 0; background: #000; color: #fff; overflow: hidden; font-family: -apple-system, sans-serif; touch-action: none; }
+        canvas { display: block; filter: contrast(1.1) brightness(1.2) saturate(1.2); }
 
-        #overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 1000; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        #overlay.hidden { opacity: 0; visibility: hidden; }
-        
-        .logo-circle { width: 80px; height: 80px; border: 1px solid var(--accent); border-radius: 50%; margin-bottom: 20px; animation: pulse 4s infinite; }
-        h0 { font-size: 20px; font-weight: 100; letter-spacing: 8px; color: var(--accent); text-transform: uppercase; }
+        /* UIレイヤー */
+        #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
+        .interactive { pointer-events: auto; }
 
-        #ui { position: absolute; top: 50px; left: 0; width: 100%; text-align: center; pointer-events: none; z-index: 100; opacity: 0; transition: opacity 1s; }
-        #ui.visible { opacity: 1; }
-        
+        /* メインヘッダー */
         .header {
-            display: inline-block; background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            padding: 10px 25px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1);
+            position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(15px);
+            padding: 12px 20px; border-radius: 15px; border: 0.5px solid rgba(255,255,255,0.1);
+            text-align: center; min-width: 200px;
         }
-        #meta { font-size: 8px; letter-spacing: 2px; color: var(--accent); margin-bottom: 4px; }
-        #title { margin: 0 0 8px 0; font-size: 18px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; }
-        #exp-line { width: 100%; height: 2px; background: rgba(255,255,255,0.1); }
+        #title { margin: 0; font-size: 16px; letter-spacing: 3px; text-transform: uppercase; font-weight: 800; }
+        #exp-bar { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-top: 8px; overflow: hidden; }
         #exp-fill { width: 0%; height: 100%; background: var(--accent); box-shadow: 0 0 10px var(--accent); transition: width 0.3s; }
 
-        #rebirth-btn { 
-            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-            background: var(--accent); color: #000; border: none; padding: 12px 30px; border-radius: 25px;
-            font-size: 11px; font-weight: bold; letter-spacing: 2px; display: none; z-index: 200;
+        /* 右上：シェア・メニュー */
+        .top-right { position: absolute; top: 50px; right: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .icon-btn { 
+            width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); 
+            backdrop-filter: blur(10px); border: none; color: #fff; font-size: 18px; 
+            display: flex; align-items: center; justify-content: center;
         }
 
-        .tap-val { position: fixed; color: var(--accent); font-weight: 900; pointer-events: none; animation: floatUp 0.6s ease-out forwards; font-size: 20px; z-index: 500; }
-        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-60px); opacity: 0; } }
-        @keyframes pulse { 0%, 100% { transform: scale(0.9); opacity: 0.3; } 50% { transform: scale(1.1); opacity: 0.7; } }
+        /* 下部：コレクション */
+        #collection-shelf {
+            position: absolute; bottom: 30px; left: 20px; right: 20px;
+            display: flex; gap: 10px; overflow-x: auto; padding: 10px 0;
+            mask-image: linear-gradient(to right, black 80%, transparent);
+        }
+        .collection-item {
+            min-width: 50px; height: 50px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);
+            background-size: cover; flex-shrink: 0;
+        }
+        #add-collection { min-width: 50px; height: 50px; border-radius: 10px; background: var(--accent); color: #000; font-size: 24px; font-weight: bold; border: none; }
+
+        #rebirth-btn { 
+            position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%);
+            background: var(--accent); color: #000; border: none; padding: 10px 25px; border-radius: 20px;
+            font-size: 10px; font-weight: 900; letter-spacing: 2px; display: none;
+        }
+
+        /* アニメーション */
+        @keyframes tapEffect { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
     </style>
 </head>
 <body>
 
-<div id="overlay" onclick="startGame()">
-    <div class="logo-circle"></div>
-    <h0>Eternal Garden</h0>
-</div>
+<canvas id="canvas"></canvas>
 
 <div id="ui">
     <div class="header">
-        <div id="meta">GEN 1 / STAGE 1</div>
-        <h1 id="title">SEED</h1>
-        <div id="exp-line"><div id="exp-fill"></div></div>
+        <div id="title">SEED</div>
+        <div id="exp-bar"><div id="exp-fill"></div></div>
     </div>
-</div>
 
-<button id="rebirth-btn" onclick="triggerRebirth()">SUBLIMATE</button>
-<canvas id="canvas"></canvas>
+    <div class="top-right">
+        <button class="icon-btn interactive" onclick="shareCanvas()">↑</button>
+        <button class="icon-btn interactive" onclick="location.reload()">↺</button>
+    </div>
+
+    <button id="rebirth-btn" class="interactive" onclick="triggerRebirth()">SUBLIMATE</button>
+
+    <div id="collection-shelf" class="interactive">
+        <button id="add-collection" onclick="addToCollection()">+</button>
+        </div>
+</div>
 
 <script>
     const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
-    const expFill = document.getElementById('exp-fill'), metaText = document.getElementById('meta'), titleText = document.getElementById('title');
-    const rebirthBtn = document.getElementById('rebirth-btn'), overlay = document.getElementById('overlay'), ui = document.getElementById('ui');
+    const expFill = document.getElementById('exp-fill'), titleText = document.getElementById('title');
+    const rebirthBtn = document.getElementById('rebirth-btn'), shelf = document.getElementById('collection-shelf');
 
-    let w, h, time = 0, exp = 0, level = 1, rebirth = 0, gameStarted = false;
-    let stars = [], particles = [], dna = {};
-
+    let w, h, time = 0, exp = 0, level = 1, rebirth = 0, dna = {}, collection = [];
     const evolutionNames = ["Seed", "Sprout", "Sapling", "Bonsai", "Radiant", "Bloom", "Ancient", "Galaxy", "Void", "Eternal"];
-    const typeColors = ['#00ffcc', '#ff00ff', '#00ff88', '#ffff00', '#ffffff', '#ff4d4d', '#4d79ff'];
+    const typeColors = ['#00ffcc', '#ff00ff', '#00ff88', '#ffff00', '#ff4d4d', '#4d79ff', '#ffffff'];
 
-    function generateDNA() {
+    function generateUniqueDNA() {
+        const seed = Date.now() + Math.random(); // 究極のランダム性
+        const colorBase = typeColors[Math.floor(Math.random() * typeColors.length)];
         dna = {
-            angle: 10 + Math.random() * 60,   // 枝の開き（狭い〜広い）
-            shrink: 0.65 + Math.random() * 0.15, // 次の枝の長さ
-            sway: 1 + Math.random() * 5,    // 揺れ幅
-            type: Math.floor(Math.random() * 5), // 0:線, 1:丸, 2:三角, 3:四角, 4:六角
-            baseAngle: (Math.random() - 0.5) * 40, // 全体の傾き
-            shapeSize: 0.5 + Math.random() * 1.5, // 図形の大きさ倍率
-            dir: (Math.random() > 0.5 ? 1 : -1) // 成長の「癖」
+            angle: 15 + (Math.sin(seed) * 0.5 + 0.5) * 50,
+            shrink: 0.68 + (Math.cos(seed) * 0.5 + 0.5) * 0.12,
+            sway: 1 + Math.random() * 4,
+            type: Math.floor(Math.random() * 5),
+            color: colorBase,
+            leafColor: Math.random() > 0.5 ? '#fff' : colorBase,
+            thickness: 2 + Math.random() * 8,
+            tilt: (Math.random() - 0.5) * 30
         };
+        document.documentElement.style.setProperty('--accent', dna.color);
     }
 
     function init() {
         w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
-        stars = Array.from({length: 50}, () => ({ x: Math.random()*w, y: Math.random()*h, s: Math.random()*1 }));
-        generateDNA();
+        generateUniqueDNA();
     }
-
-    function startGame() { gameStarted = true; overlay.classList.add('hidden'); ui.classList.add('visible'); }
 
     window.addEventListener('touchstart', e => {
-        if(!gameStarted || level >= 20) return;
         e.preventDefault();
-        const gain = (10 / Math.log2(level + 2)) * (1 + rebirth * 1.5);
-        exp += gain;
-        if(exp >= 100 && level < 20) { level++; exp = 0; updateUI(); }
-        expFill.style.width = exp + '%';
-        const t = e.touches[0];
-        showTapValue(t.clientX, t.clientY, gain);
-        for(let i=0; i<5; i++) particles.push({x: t.clientX, y: t.clientY, a: Math.random()*Math.PI*2, s: Math.random()*3+1, l: 1});
+        if(level < 20) {
+            exp += (12 / Math.log2(level + 2)) * (1 + rebirth * 0.5);
+            if(exp >= 100) { level++; exp = 0; updateUI(); }
+            expFill.style.width = exp + '%';
+        }
     });
 
-    function showTapValue(x, y, val) {
-        const el = document.createElement('div');
-        el.className = 'tap-val'; el.style.left = x + 'px'; el.style.top = y + 'px';
-        el.innerText = '+' + val.toFixed(0);
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 600);
-    }
-
     function updateUI() {
-        metaText.innerText = `GEN ${rebirth + 1} / STAGE ${level} (BUFF x${(1 + rebirth * 1.5).toFixed(1)})`;
         titleText.innerText = evolutionNames[Math.min(9, Math.floor((level-1)/2))];
-        document.documentElement.style.setProperty('--accent', typeColors[rebirth % typeColors.length]);
         if(level >= 20) rebirthBtn.style.display = 'block';
     }
 
     function triggerRebirth() {
-        rebirth++; level = 1; exp = 0; generateDNA();
-        rebirthBtn.style.display = 'none'; updateUI();
+        rebirth++; level = 1; exp = 0;
+        rebirthBtn.style.display = 'none';
+        generateUniqueDNA();
+        updateUI();
     }
 
-    function drawShape(ctx, len) {
-        const s = len * 0.3 * dna.shapeSize;
+    function addToCollection() {
+        const dataUrl = canvas.toDataURL('image/png', 0.1);
+        const item = document.createElement('div');
+        item.className = 'collection-item';
+        item.style.backgroundImage = `url(${dataUrl})`;
+        const currentDNA = JSON.parse(JSON.stringify(dna)); // DNAを保存
+        item.onclick = () => { dna = currentDNA; document.documentElement.style.setProperty('--accent', dna.color); };
+        shelf.appendChild(item);
+    }
+
+    function shareCanvas() {
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = `Garden_${Date.now()}.png`;
+        link.href = dataUrl;
+        link.click();
+    }
+
+    function drawShape(len, depth) {
+        const s = len * 0.3;
         if (dna.type === 1) ctx.arc(0, -len/2, len/2, 0, Math.PI*2);
         else if (dna.type === 2) { ctx.moveTo(0, -len); ctx.lineTo(s, 0); ctx.lineTo(-s, 0); ctx.closePath(); }
         else if (dna.type === 3) ctx.rect(-s/2, -len, s, s);
@@ -138,52 +157,38 @@
     }
 
     function drawTree(x, y, len, angle, depth) {
-        if (depth > Math.min(level + 1, 10)) return;
-        
+        if (depth > Math.min(level + 1, 11)) return;
         ctx.save();
         ctx.translate(x, y);
         ctx.rotate(angle * Math.PI / 180);
-        
         ctx.beginPath();
-        ctx.strokeStyle = (depth > level - 2) ? getComputedStyle(document.documentElement).getPropertyValue('--accent') : "#fff";
-        ctx.lineWidth = Math.max(1, 10 / (depth + 1));
-        ctx.globalAlpha = 1 - (depth / 12);
         
-        drawShape(ctx, len);
+        // 色のロジック：深くなるほどdna.colorを維持
+        ctx.strokeStyle = (depth > level - 2) ? dna.leafColor : dna.color;
+        ctx.lineWidth = Math.max(0.5, dna.thickness / (depth + 1));
+        ctx.globalAlpha = 1 - (depth / 14);
+        
+        drawShape(len, depth);
         ctx.stroke();
 
-        const swayAmt = Math.sin(time + depth) * dna.sway;
-        drawTree(0, -len, len * dna.shrink, dna.angle + swayAmt, depth + 1);
-        drawTree(0, -len, len * dna.shrink, -dna.angle + swayAmt, depth + 1);
+        const s = Math.sin(time + depth) * dna.sway;
+        drawTree(0, -len, len * dna.shrink, dna.angle + s, depth + 1);
+        drawTree(0, -len, len * dna.shrink, -dna.angle + s, depth + 1);
         ctx.restore();
     }
 
     function render() {
-        time = Date.now() * 0.0015;
+        time = Date.now() * 0.002;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         
-        stars.forEach(s => {
-            ctx.fillStyle = "#fff"; ctx.globalAlpha = 0.2;
-            ctx.fillRect(s.x, s.y, s.s, s.s);
-        });
-
-        if(gameStarted) {
-            particles.forEach((p, i) => {
-                p.x += Math.cos(p.a)*p.s; p.y += Math.sin(p.a)*p.s; p.l -= 0.03;
-                if(p.l <= 0) particles.splice(i, 1);
-                ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent');
-                ctx.globalAlpha = p.l; ctx.fillRect(p.x, p.y, 2, 2);
-            });
-
-            // はみ出し防止のスケーリング計算
-            const baseLen = (h / 6) + (level * 5);
-            const scale = Math.min(1, (h * 0.8) / (baseLen * 3)); // 画面の80%に収める
-            
-            ctx.lineCap = 'round';
-            drawTree(w/2, h - 100, baseLen * scale, dna.baseAngle, 0);
-        }
+        const baseLen = (h / 7) + (level * 6);
+        const scale = Math.min(1, (h * 0.85) / (baseLen * 3));
+        
+        ctx.lineCap = 'round';
+        drawTree(w/2, h - 80, baseLen * scale, dna.tilt, 0);
         requestAnimationFrame(render);
     }
+
     window.addEventListener('resize', init);
     init(); render(); updateUI();
 </script>
