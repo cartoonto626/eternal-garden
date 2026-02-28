@@ -3,37 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Eternal Garden: Infinite Diversity</title>
+    <title>Eternal Garden: Genesis</title>
     <style>
         :root { --accent: #00ffcc; --bg: #000; }
         body { margin: 0; background: var(--bg); color: #fff; overflow: hidden; font-family: 'Inter', sans-serif; touch-action: none; }
-        canvas { display: block; filter: contrast(1.1) brightness(1.2); }
+        canvas { display: block; }
 
-        .status-bar { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 12px 30px; border-radius: 40px; border: 0.5px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; min-width: 240px; z-index: 100; opacity: 0; transition: 1s; }
-        #meta-info { font-size: 8px; letter-spacing: 2px; color: var(--accent); margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
-        #title { font-size: 13px; letter-spacing: 6px; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; }
-        .exp-container { width: 100%; height: 1px; background: rgba(255,255,255,0.1); position: relative; }
-        #exp-fill { width: 0%; height: 100%; background: var(--accent); box-shadow: 0 0 12px var(--accent); transition: width 0.3s; }
+        /* 導入スライド（日英併記） */
+        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; transition: 1s cubic-bezier(0.4, 0, 0.2, 1); text-align: center; padding: 0 40px; box-sizing: border-box; }
+        .hidden { opacity: 0; visibility: hidden; pointer-events: none; transform: scale(1.1); }
+        .logo-dot { width: 2px; height: 2px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 15px var(--accent); animation: pulse-dot 3s infinite; margin-bottom: 30px; }
+        .slide-content h2 { font-size: 14px; letter-spacing: 10px; font-weight: 300; color: var(--accent); margin-bottom: 25px; text-transform: uppercase; }
+        .slide-content p { font-size: 11px; line-height: 2.5; opacity: 0.7; font-weight: 300; margin: 0; letter-spacing: 0.1em; }
+        .tap-hint { margin-top: 60px; font-size: 9px; letter-spacing: 5px; opacity: 0.4; animation: blink 3s infinite; }
 
-        .side-controls { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 20px; z-index: 100; opacity: 0; transition: 1s; }
-        .icon-btn { width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 0.5px solid rgba(255,255,255,0.1); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+        /* ステータスバー（スクリーンショット再現） */
+        .status-bar { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 15px 35px; border-radius: 40px; border: 0.5px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; min-width: 260px; z-index: 100; opacity: 0; transition: 1.5s; }
+        #meta-info { font-size: 8px; letter-spacing: 2px; color: var(--accent); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; opacity: 0.8; }
+        #title { font-size: 16px; letter-spacing: 8px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; }
+        .exp-container { width: 100%; height: 1.5px; background: rgba(255,255,255,0.1); position: relative; overflow: hidden; }
+        #exp-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); box-shadow: 0 0 15px var(--accent); transition: width 0.5s cubic-bezier(0.23, 1, 0.32, 1); }
 
-        #rebirth-btn { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: none; border: 1px solid var(--accent); color: var(--accent); padding: 14px 45px; border-radius: 35px; font-size: 10px; font-weight: 800; letter-spacing: 5px; display: none; z-index: 100; backdrop-filter: blur(5px); }
+        /* 右側コントロールボタン */
+        .side-controls { position: absolute; top: 55%; right: 25px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 20px; z-index: 100; opacity: 0; transition: 1s; }
+        .icon-btn { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); border: 0.5px solid rgba(255,255,255,0.12); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.3s; }
+        .icon-btn:active { transform: scale(0.85); background: rgba(255,255,255,0.2); }
 
-        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; transition: 1s; text-align: center; padding: 0 40px; box-sizing: border-box; }
-        .hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        #rebirth-btn { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); border: 1px solid var(--accent); color: var(--accent); padding: 16px 50px; border-radius: 40px; font-size: 11px; font-weight: 800; letter-spacing: 6px; display: none; z-index: 100; backdrop-filter: blur(10px); }
+
+        @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(4.5); opacity: 1; } }
+        @keyframes blink { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
     </style>
 </head>
 <body>
 
 <div id="overlay" class="overlay-layer" onclick="showSlide(1)">
-    <div style="width:2px; height:2px; background:var(--accent); box-shadow:0 0 15px var(--accent); margin-bottom:30px;"></div>
-    <div style="font-size:10px; letter-spacing:12px;">ETERNAL GARDEN</div>
+    <div class="logo-dot"></div>
+    <div style="font-size:11px; letter-spacing:14px; font-weight:200;">ETERNAL GARDEN</div>
+    <div class="tap-hint">TAP TO AWAKEN</div>
 </div>
 
-<div id="slide1" class="overlay-layer hidden" onclick="startGame()">
-    <div style="font-size:13px; letter-spacing:10px; color:var(--accent); margin-bottom:25px;">DIVERSITY</div>
-    <p style="font-size:11px; line-height:2.2; opacity:0.6;">同じ形は、二度と現れない。<br>一粒の光から始まる、無限の分岐へ。</p>
+<div id="slide1" class="overlay-layer hidden" onclick="showSlide(2)">
+    <div class="slide-content">
+        <h2>Genesis / 起源</h2>
+        <p>虚空に舞い降りた、一粒の光。<br>あなたの指先が、静寂を幾何学に変える。</p>
+    </div>
+    <div class="tap-hint">NEXT</div>
+</div>
+
+<div id="slide2" class="overlay-layer hidden" onclick="startGame()">
+    <div class="slide-content">
+        <h2>System / 共生</h2>
+        <p>育ち、記録し、また昇華する。<br>二度と同じ形のない、一期一会の庭園へ。</p>
+    </div>
+    <div class="tap-hint">BEGIN</div>
 </div>
 
 <div id="status-ui" class="status-bar">
@@ -43,7 +66,10 @@
 </div>
 
 <div id="side-ui" class="side-controls">
-    <button class="icon-btn" onclick="location.reload()">↺</button>
+    <button class="icon-btn" onclick="effectTrigger()" title="Collect">+</button>
+    <button class="icon-btn" onclick="mutateStyle()" title="Mutation">⬢</button>
+    <button class="icon-btn" onclick="shareCanvas()" title="Share">↑</button>
+    <button class="icon-btn" onclick="location.reload()" title="Reset">↺</button>
 </div>
 
 <button id="rebirth-btn" onclick="triggerRebirth()">SUBLIMATE / 昇華</button>
@@ -59,37 +85,40 @@
     const names = ["Seed", "Pulse", "Sprout", "Bloom", "Network", "Radiant", "Ancient", "Galaxy", "Void", "Eternal"];
 
     function generateDNA() {
-        const s = Math.random();
         dna = {
             angle: 15 + Math.random() * 50,
-            shrink: 0.68 + Math.random() * 0.12,
-            sway: 0.4 + Math.random() * 1.6,
+            shrink: 0.65 + Math.random() * 0.15,
+            sway: 0.4 + Math.random() * 1.4,
             thickness: 1.2 + Math.random() * 2.5,
             color: typeColors[Math.floor(Math.random() * typeColors.length)],
-            // 多様性のための新パラメータ
-            branchType: Math.floor(Math.random() * 4), // 0:直線 1:曲線 2:円 3:多角形
-            asymmetry: (Math.random() - 0.5) * 10, // 左右非対称性
-            splitCount: Math.random() > 0.8 ? 3 : 2 // たまに3分岐する
+            mode: Math.floor(Math.random() * 3), // 0:Line, 1:Circle, 2:Hex
+            asymmetry: (Math.random() - 0.5) * 8,
+            split: Math.random() > 0.85 ? 3 : 2 
         };
         document.documentElement.style.setProperty('--accent', dna.color);
     }
 
     function init() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; generateDNA(); }
     function showSlide(n) {
-        document.getElementById('overlay').classList.add('hidden');
-        document.getElementById('slide1').classList.remove('hidden');
+        document.querySelectorAll('.overlay-layer').forEach(el => el.classList.add('hidden'));
+        if(n === 1) document.getElementById('slide1').classList.remove('hidden');
+        if(n === 2) document.getElementById('slide2').classList.remove('hidden');
     }
     function startGame() { 
-        document.getElementById('slide1').classList.add('hidden'); 
+        document.getElementById('slide2').classList.add('hidden'); 
         gameStarted = true; 
         setTimeout(() => { statusUi.style.opacity = sideUi.style.opacity = "1"; }, 500); 
     }
+
+    function mutateStyle() { dna.mode = (dna.mode + 1) % 3; }
+    function effectTrigger() { ctx.fillStyle = "rgba(255,255,255,0.2)"; ctx.fillRect(0,0,w,h); }
+    function shareCanvas() { if(navigator.share) navigator.share({title:'Eternal Garden', url:location.href}); else alert("Link Copied"); }
 
     window.addEventListener('touchstart', e => {
         if(!gameStarted || e.target.closest('button')) return;
         if(level < 20) {
             const buff = 1 + rebirth * 0.5;
-            exp += (55 / Math.sqrt(level)) * buff;
+            exp += (58 / Math.sqrt(level)) * buff;
             if(exp >= 100) { level++; exp = 0; updateUI(); }
             expFill.style.width = Math.min(100, exp) + '%';
         }
@@ -103,64 +132,58 @@
 
     function triggerRebirth() { rebirth++; level = 1; exp = 0; generateDNA(); updateUI(); }
 
-    // 多様なパーツを描画
-    function drawPart(len, depth) {
-        const s = len * 0.3;
-        if (dna.branchType === 1) { // 曲線
-            ctx.quadraticCurveTo(s, -len/2, 0, -len);
-        } else if (dna.branchType === 2) { // 円
-            ctx.arc(0, -len/2, len/3, 0, Math.PI * 2);
-        } else if (dna.branchType === 3) { // 多角形/結晶
-            ctx.moveTo(0, 0); ctx.lineTo(s, -len/2); ctx.lineTo(0, -len); ctx.lineTo(-s, -len/2); ctx.closePath();
-        } else { // 直線
+    function drawBranch(len, depth) {
+        if (dna.mode === 1) { // Circle
+            ctx.arc(0, -len/2, len/2.2, 0, Math.PI * 2);
+        } else if (dna.mode === 2) { // Hex
+            for(let i=0; i<6; i++) ctx.lineTo(Math.cos(i*Math.PI/3)*len/2.5, -len/2 + Math.sin(i*Math.PI/3)*len/2.5);
+        } else { // Line
             ctx.moveTo(0, 0); ctx.lineTo(0, -len);
         }
     }
 
     function drawTree(len, angle, depth) {
-        const maxDepth = Math.min(10, Math.floor(level / 1.8) + 2);
+        const maxDepth = Math.min(11, Math.floor(level / 1.8) + 1);
         if (depth > maxDepth) return;
 
         ctx.beginPath();
-        ctx.lineWidth = Math.max(0.4, (dna.thickness * (1 - depth/maxDepth)) + (level/15));
+        ctx.lineWidth = Math.max(0.5, (dna.thickness * (1 - depth/maxDepth)) + (level/20));
         ctx.strokeStyle = dna.color;
         ctx.globalAlpha = Math.max(0.1, 1 - (depth / (maxDepth + 1)));
 
         if(level === 1 && depth === 0) {
-            ctx.arc(0, 0, 1.5, 0, Math.PI*2); ctx.fill();
+            ctx.arc(0, 0, 1.8, 0, Math.PI*2); ctx.fill();
         } else {
-            drawPart(len, depth); // 形状を変更
+            drawBranch(len, depth);
         }
         ctx.stroke();
 
         ctx.save();
         ctx.translate(0, -len);
-        
         const sway = Math.sin(time + depth) * dna.sway;
         const nextLen = len * dna.shrink;
 
-        // 分岐処理（多様性）
-        const angles = dna.splitCount === 3 ? [-angle, 0, angle] : [-angle, angle];
-        angles.forEach((a, i) => {
+        const branchAngles = dna.split === 3 ? [-angle, 0, angle] : [-angle, angle];
+        branchAngles.forEach((a, i) => {
             ctx.save();
-            // 左右非対称を適用
-            ctx.rotate((a + sway + (i === 0 ? -dna.asymmetry : dna.asymmetry)) * Math.PI / 180);
+            ctx.rotate((a + sway + (i===0 ? -dna.asymmetry : dna.asymmetry)) * Math.PI / 180);
             drawTree(nextLen, angle, depth + 1);
             ctx.restore();
         });
-        
         ctx.restore();
     }
 
     function render() {
-        time = Date.now() * 0.0015;
+        time = Date.now() * 0.0016;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         if(gameStarted) {
-            const baseLen = (level === 1) ? 2 : 12 + (level * 8);
-            const autoScale = (level === 1) ? 1 : Math.min(1.1, (h * 0.7) / (baseLen * 2.8));
+            let baseLen = (level === 1) ? 2 : 12 + (level * 7.5);
+            // 画面外はみ出し防止の自動スケール（スクリーンショットのような収まりを維持）
+            const scaleFactor = (level < 4) ? 1 : Math.min(1.0, (h * 0.65) / (baseLen * 2.6));
+            
             ctx.save();
-            ctx.translate(w/2, h - 120);
-            drawTree(baseLen * autoScale, dna.angle, 0);
+            ctx.translate(w/2, h - 140);
+            drawTree(baseLen * scaleFactor, dna.angle, 0);
             ctx.restore();
         }
         requestAnimationFrame(render);
