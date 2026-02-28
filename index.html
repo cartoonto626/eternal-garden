@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-browser-capable" content="yes">
+    <meta name="apple-mobile-web-browser-status-bar-style" content="black-translucent">
     <title>Eternal Garden: Elite Edition</title>
     <style>
         :root { --accent: #00ffcc; }
@@ -210,14 +212,17 @@
         time = Date.now() * 0.002;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         if(gameStarted) {
-            const baseLen = (h / 7) + (level * 6);
-            const scale = Math.min(1, (h * 0.85) / (baseLen * 3.2));
+            // SEEDからの無垢な始まり（より小さく）
+            const baseLen = (h / 8) + (level * 6);
+            // はみ出し防止のスケーリング計算
+            const scale = Math.min(1, (h * 0.9) / (baseLen * 3)); // 画面の90%に収める
+            
             ctx.lineCap = 'round';
+            // 樹を下部に配置。UIと被らないように！
             drawTree(w/2, h - 80, baseLen * scale, dna.tilt, 0);
         }
         requestAnimationFrame(render);
     }
-
     window.addEventListener('resize', init);
     init(); render(); updateUI();
 </script>
