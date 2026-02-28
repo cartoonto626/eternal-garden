@@ -3,185 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Eternal Garden: Zen Equilibrium</title>
+    <title>Eternal Garden: Manual of Silence</title>
     <style>
         :root { --accent: #00ffcc; --bg: #000; }
         body { margin: 0; background: var(--bg); color: #fff; overflow: hidden; font-family: 'Inter', sans-serif; touch-action: none; }
-        canvas { display: block; filter: contrast(1.2) brightness(1.1); transition: transform 0.1s ease-out; }
+        canvas { display: block; filter: contrast(1.1) brightness(1.2); }
 
-        /* UI（機能維持 & 視認性向上） */
-        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; transition: 2s cubic-bezier(0.19, 1, 0.22, 1); text-align: center; padding: 0 40px; box-sizing: border-box; }
-        .hidden { opacity: 0; visibility: hidden; pointer-events: none; transform: scale(1.1); }
-        .logo-dot { width: 3px; height: 3px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 25px var(--accent); animation: pulse-dot 4s infinite; margin-bottom: 30px; }
-        
-        .status-bar { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(35px); -webkit-backdrop-filter: blur(35px); padding: 18px 30px; border-radius: 45px; border: 0.5px solid rgba(255,255,255,0.15); display: flex; flex-direction: column; align-items: center; min-width: 280px; z-index: 100; opacity: 0; transition: 1.5s; }
-        #meta-info { font-size: 9px; letter-spacing: 3px; color: var(--accent); margin-bottom: 10px; font-weight: 700; text-transform: uppercase; }
-        #title { font-size: 16px; letter-spacing: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 14px; text-indent: 10px; }
-        .exp-container { width: 100%; height: 2px; background: rgba(255,255,255,0.1); position: relative; overflow: hidden; border-radius: 1px; }
-        #exp-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); box-shadow: 0 0 15px var(--accent); transition: width 0.4s cubic-bezier(0.1, 0.8, 0.2, 1); }
+        /* UI（共通ボタン） */
+        .icon-btn { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.2); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; backdrop-filter: blur(15px); -webkit-tap-highlight-color: transparent; transition: 0.3s; }
+        .icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.15); }
 
+        /* ガイド・アーカイブ共通パネル */
+        .full-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.96); z-index: 4000; display: none; flex-direction: column; padding: 60px 30px; box-sizing: border-box; overflow-y: auto; }
+        .panel-header { font-size: 10px; letter-spacing: 12px; text-align: center; margin-bottom: 40px; color: var(--accent); text-transform: uppercase; }
+        .close-panel { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); font-size: 9px; letter-spacing: 5px; opacity: 0.5; padding: 12px 40px; border: 0.5px solid rgba(255,255,255,0.3); border-radius: 30px; background: rgba(0,0,0,0.5); }
+
+        /* ガイドコンテンツ */
+        .guide-section { margin-bottom: 40px; border-bottom: 0.5px solid rgba(255,255,255,0.1); padding-bottom: 20px; }
+        .guide-section h3 { font-size: 13px; letter-spacing: 4px; color: var(--accent); margin-bottom: 10px; }
+        .guide-section p { font-size: 10px; line-height: 2.2; opacity: 0.8; margin: 0; }
+        .guide-en { display: block; font-size: 8px; opacity: 0.5; margin-top: 5px; text-transform: uppercase; }
+
+        /* メインUI配置 */
+        .status-bar { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(40px); padding: 18px 30px; border-radius: 45px; border: 0.5px solid rgba(255,255,255,0.15); display: flex; flex-direction: column; align-items: center; min-width: 280px; z-index: 100; opacity: 0; transition: 1s; }
         .side-controls { position: absolute; top: 55%; right: 25px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 20px; z-index: 100; opacity: 0; transition: 1s; }
-        .icon-btn { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 0.5px solid rgba(255,255,255,0.2); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; backdrop-filter: blur(15px); -webkit-tap-highlight-color: transparent; }
-        .icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.1); }
+        .top-left-controls { position: absolute; top: 60px; left: 25px; display: flex; flex-direction: column; gap: 15px; z-index: 100; opacity: 0; transition: 1s; }
 
-        #rebirth-btn { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1px solid var(--accent); color: var(--accent); padding: 18px 55px; border-radius: 50px; font-size: 12px; font-weight: 800; letter-spacing: 8px; display: none; z-index: 100; box-shadow: 0 0 30px rgba(0,255,204,0.1); transition: 0.3s; }
-        #rebirth-btn:active { transform: translateX(-50%) scale(0.95); background: var(--accent); color: #000; }
+        .specimen-row { background: rgba(255,255,255,0.04); border-radius: 15px; padding: 20px; display: flex; align-items: center; margin-bottom: 10px; border-left: 2px solid var(--accent); }
+        .exp-container { width: 100%; height: 1.5px; background: rgba(255,255,255,0.1); margin-top: 10px; overflow: hidden; }
+        #exp-fill { height: 100%; background: var(--accent); box-shadow: 0 0 15px var(--accent); transition: width 0.4s; }
 
-        @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(4); opacity: 0.9; } }
+        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5000; transition: 2s; text-align: center; }
+        .hidden { opacity: 0; visibility: hidden; pointer-events: none; }
     </style>
 </head>
 <body>
 
 <div id="overlay" class="overlay-layer" onclick="showSlide(1)">
-    <div class="logo-dot"></div>
-    <div style="font-size:11px; letter-spacing:14px; font-weight:200; opacity:0.8;">ETERNAL GARDEN</div>
+    <div style="width:2px; height:2px; background:var(--accent); box-shadow:0 0 20px var(--accent); margin-bottom:30px;"></div>
+    <div style="font-size:11px; letter-spacing:14px;">ETERNAL GARDEN</div>
 </div>
 
-<div id="slide1" class="overlay-layer hidden" onclick="showSlide(2)">
-    <div style="text-align:center;">
-        <h2 style="font-size:14px; letter-spacing:12px; font-weight:300; color:var(--accent); margin-bottom:25px;">GENESIS / 起源</h2>
-        <p style="font-size:11px; line-height:2.5; opacity:0.7; font-weight:300;">虚空に舞い降りた、一粒の光。<br>あなたの指先が、静寂を幾何学に変える。</p>
-    </div>
-</div>
-
-<div id="slide2" class="overlay-layer hidden" onclick="startGame()">
-    <div style="text-align:center;">
-        <h2 style="font-size:14px; letter-spacing:12px; font-weight:300; color:var(--accent); margin-bottom:25px;">SYSTEM / 共生</h2>
-        <p style="font-size:11px; line-height:2.5; opacity:0.7; font-weight:300;">育ち、記録し、また昇華する。<br>二度と同じ形のない、一期一会の庭園へ。</p>
+<div id="slide1" class="overlay-layer hidden" onclick="startGame()">
+    <div style="padding:0 40px;">
+        <h2 style="font-size:12px; letter-spacing:10px; color:var(--accent); margin-bottom:20px;">GUIDE / 案内</h2>
+        <p style="font-size:10px; line-height:2.4; opacity:0.7;">この庭園には、終わりも始まりもありません。<br>静寂の中で、形との対話をお楽しみください。</p>
     </div>
 </div>
 
 <div id="status-ui" class="status-bar">
-    <div id="meta-info">G.1 / S.1 <span id="buff-val" style="margin-left:10px; opacity:0.6;">x1.0</span></div>
-    <div id="title">SEED</div>
-    <div class="exp-container"><div id="exp-fill"></div></div>
+    <div id="meta-info" style="font-size:9px; letter-spacing:3px;">G.1 / S.1 <span id="buff-val" style="margin-left:10px; opacity:0.4;">x1.0</span></div>
+    <div id="title" style="font-size:16px; letter-spacing:10px; font-weight:800; margin-top:10px;">SEED</div>
+    <div class="exp-container"><div id="exp-fill" style="width:0%"></div></div>
+</div>
+
+<div id="top-ui" class="top-left-controls">
+    <button class="icon-btn" onclick="openPanel('guide-page')">?</button>
+    <button class="icon-btn" onclick="openPanel('archive-page')">≡</button>
 </div>
 
 <div id="side-ui" class="side-controls">
-    <button class="icon-btn" onclick="flash()">+</button>
+    <button class="icon-btn" onclick="nameAndSave()">+</button>
     <button class="icon-btn" onclick="mutateChaos()">⬢</button>
-    <button class="icon-btn" onclick="share()">↑</button>
     <button class="icon-btn" onclick="location.reload()">↺</button>
 </div>
 
-<button id="rebirth-btn" onclick="triggerRebirth()">SUBLIMATE / 昇華</button>
+<div id="guide-page" class="full-panel">
+    <div class="panel-header">Way of the Garden / 庭園の作法</div>
+    
+    <div class="guide-section">
+        <h3>1. Birth / 誕生</h3>
+        <p>画面の何もない場所をタップすることで、光に経験を与えます。バーが満たされるたび、生命はより複雑に成長します。
+        <span class="guide-en">Tap the void to grant experience to the light. Each time the bar fills, the life grows more complex.</span></p>
+    </div>
+
+    <div class="guide-section">
+        <h3>2. Specimen / 標本</h3>
+        <p>右側の「＋」で現在の姿に名前を付け、標本箱（≡）へ保存できます。お気に入りの成長段階で、時間を止めてください。
+        <span class="guide-en">Use the "+" to name and save your current form to the archive (≡). Freeze time at your favorite stage.</span></p>
+    </div>
+
+    <div class="guide-section">
+        <h3>3. Mutation / 変異</h3>
+        <p>「⬢」ボタンは、生命の設計図を書き換えます。色や形、育つ方向がランダムに変化し、新たな可能性が開かれます。
+        <span class="guide-en">The "⬢" button rewrites the blueprint. Colors, shapes, and growth directions change randomly.</span></p>
+    </div>
+
+    <div class="guide-section">
+        <h3>4. Sublimation / 昇華</h3>
+        <p>最大まで育つと「昇華」が可能になります。一度全てを失う代わりに、次の生命はより早く、より力強く成長します。
+        <span class="guide-en">At max growth, "Sublimation" becomes available. Sacrifice all to make the next life grow faster and stronger.</span></p>
+    </div>
+
+    <div class="close-panel" onclick="closePanel('guide-page')">RETURN</div>
+</div>
+
+<div id="archive-page" class="full-panel">
+    <div class="panel-header">Specimens / 標本箱</div>
+    <div id="list" class="specimen-list"></div>
+    <div class="close-panel" onclick="closePanel('archive-page')">RETURN</div>
+</div>
+
 <canvas id="canvas"></canvas>
 
 <script>
     const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
     const expFill = document.getElementById('exp-fill'), titleText = document.getElementById('title'), 
-          metaInfo = document.getElementById('meta-info'), buffText = document.getElementById('buff-val');
-    const rebirthBtn = document.getElementById('rebirth-btn'), statusUi = document.getElementById('status-ui'), sideUi = document.getElementById('side-ui');
-
-    let w, h, time = 0, exp = 0, level = 1, rebirth = 0, dna = {}, gameStarted = false, tapPulse = 0;
+          metaInfo = document.getElementById('meta-info'), list = document.getElementById('list');
+    
+    let w, h, time = 0, exp = 0, level = 1, rebirth = 0, dna = {}, gameStarted = false, archive = [];
     const typeColors = ['#00ffcc', '#ff00ff', '#00ff88', '#ffff00', '#ff4d4d', '#4d79ff', '#ffffff'];
     const names = ["Seed", "Pulse", "Sprout", "Bloom", "Network", "Radiant", "Ancient", "Galaxy", "Void", "Eternal"];
+    let stars = [];
 
     function generateDNA() {
         dna = {
             base: Math.floor(Math.random() * 5),
             angle: 15 + Math.random() * 55,
             shrink: 0.55 + Math.random() * 0.25,
-            swayIntensity: 0.05 + Math.random() * 0.15, // 極限まで動きを抑制
+            sway: 0.04 + Math.random() * 0.08,
             color: typeColors[Math.floor(Math.random() * typeColors.length)],
-            thickness: 0.8 + Math.random() * 1.5,
-            branchFactor: 2, 
-            asymmetry: (Math.random() - 0.5) * 20,
-            isCenter: Math.random() > 0.65
+            isCenter: Math.random() > 0.7
         };
         document.documentElement.style.setProperty('--accent', dna.color);
     }
 
-    function init() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; generateDNA(); }
-    function showSlide(n) { document.querySelectorAll('.overlay-layer').forEach(el => el.classList.add('hidden')); if(n === 1) document.getElementById('slide1').classList.remove('hidden'); if(n === 2) document.getElementById('slide2').classList.remove('hidden'); }
-    function startGame() { document.getElementById('slide2').classList.add('hidden'); gameStarted = true; setTimeout(() => { statusUi.style.opacity = sideUi.style.opacity = "1"; }, 500); }
+    function init() { 
+        w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight;
+        generateDNA();
+        stars = Array(50).fill().map(() => ({ x: Math.random()*w, y: Math.random()*h, r: Math.random()*1.2 }));
+    }
 
-    function flash() { ctx.fillStyle = dna.color; ctx.globalAlpha = 0.2; ctx.fillRect(0,0,w,h); }
+    function showSlide(n) { document.getElementById('overlay').classList.add('hidden'); document.getElementById('slide1').classList.remove('hidden'); }
+    function startGame() { document.getElementById('slide1').classList.add('hidden'); gameStarted = true; 
+        document.getElementById('status-ui').style.opacity = document.getElementById('side-ui').style.opacity = document.getElementById('top-ui').style.opacity = 1; 
+    }
+
+    function openPanel(id) { document.getElementById(id).style.display = "flex"; if(id === 'archive-page') renderArchive(); }
+    function closePanel(id) { document.getElementById(id).style.display = "none"; }
+
+    function nameAndSave() {
+        const customName = prompt("標本に名前を刻んでください / Name this specimen", "");
+        archive.push({ ...dna, level: level, label: customName || "UNNAMED", time: new Date().toLocaleTimeString() });
+    }
+
+    function renderArchive() {
+        list.innerHTML = "";
+        archive.forEach((item, index) => {
+            const row = document.createElement('div');
+            row.className = 'specimen-row';
+            row.style.borderLeftColor = item.color;
+            row.innerHTML = `<div style="width:10px; height:10px; background:${item.color}; border-radius:50%;"></div>
+                             <div style="margin-left:20px; flex-grow:1;">
+                                <div style="font-size:13px; letter-spacing:2px;">${item.label}</div>
+                                <div style="font-size:7px; opacity:0.4; margin-top:4px;">STAGE ${item.level} / ${item.time}</div>
+                             </div>`;
+            row.onclick = () => { dna = {...item}; level = item.level; closePanel('archive-page'); updateUI(); };
+            list.appendChild(row);
+        });
+    }
+
     function mutateChaos() { generateDNA(); updateUI(); }
-    function share() { if(navigator.share) navigator.share({title:'Eternal Garden', url:location.href}); }
 
     window.addEventListener('touchstart', e => {
-        if(!gameStarted || e.target.closest('button')) return;
-        
-        // タップフィードバック
-        tapPulse = 1.0; 
-        canvas.style.transform = 'scale(0.99)';
-        setTimeout(() => canvas.style.transform = 'scale(1)', 100);
-
+        if(!gameStarted || e.target.closest('button') || document.querySelector('.full-panel[style*="flex"]')) return;
         if(level < 20) {
-            // 絶妙な難易度曲線: 最初は早く、徐々にじっくり
-            const difficultyScale = level < 6 ? 1.5 : (level < 15 ? 0.8 : 0.5);
-            const buff = 1 + rebirth * 0.5;
-            exp += (60 / Math.sqrt(level)) * buff * difficultyScale;
-            
+            exp += (60 / Math.sqrt(level)) * (1 + rebirth * 0.5);
             if(exp >= 100) { level++; exp = 0; updateUI(); }
-            expFill.style.width = Math.min(100, exp) + '%';
+            expFill.style.width = exp + '%';
         }
     });
 
     function updateUI() {
-        metaInfo.innerHTML = `G.${rebirth + 1} / S.${level} <span id="buff-val" style="margin-left:10px; opacity:0.6;">x${(1 + rebirth * 0.5).toFixed(1)}</span>`;
+        metaInfo.innerHTML = `G.${rebirth + 1} / S.${level} <span style="margin-left:10px; opacity:0.4;">x${(1 + rebirth * 0.5).toFixed(1)}</span>`;
         titleText.innerText = names[Math.min(9, Math.floor((level-1)/2))].toUpperCase();
-        rebirthBtn.style.display = level >= 20 ? 'block' : 'none';
     }
 
-    function triggerRebirth() { rebirth++; level = 1; exp = 0; generateDNA(); updateUI(); }
-
     function drawBranch(len, depth, maxD) {
-        ctx.beginPath();
-        ctx.strokeStyle = dna.color;
-        // タップ時の脈動を線の太さに反映
-        ctx.lineWidth = Math.max(0.4, (dna.thickness + tapPulse*1.5) * (1 - depth/maxD) + (level/40));
-        ctx.globalAlpha = Math.max(0.1, 1 - (depth/maxD));
-
-        const bt = dna.base;
-        if (bt === 1) ctx.rect(-len/4, -len, len/2, len/2);
-        else if (bt === 2) ctx.arc(0, -len/2, Math.abs(len/3.5), 0, 7);
-        else if (bt === 3) ctx.quadraticCurveTo(dna.asymmetry, -len/2, 0, -len);
+        ctx.beginPath(); ctx.strokeStyle = dna.color;
+        ctx.lineWidth = Math.max(0.4, 0.8 * (1 - depth/maxD) + (level/45));
+        ctx.globalAlpha = Math.max(0.1, 0.8 - (depth/maxD * 0.7));
+        if (dna.base === 1) ctx.rect(-len/4, -len, len/2, len/2);
+        else if (dna.base === 2) ctx.arc(0, -len/2, Math.abs(len/4), 0, 7);
         else { ctx.moveTo(0,0); ctx.lineTo(0, -len); }
         ctx.stroke();
     }
 
     function grow(len, angle, depth) {
-        const maxD = Math.min(11, Math.floor(level / 1.8) + 1);
+        const maxD = Math.min(10, Math.floor(level / 2) + 1);
         if (depth > maxD) return;
-
         drawBranch(len, depth, maxD);
-
-        ctx.save();
-        ctx.translate(0, -len);
-        // 超低速・優雅な揺れ
-        const sway = Math.sin(time + depth * 0.3) * (angle * dna.swayIntensity);
-        const nextLen = len * dna.shrink;
-
-        const count = (depth === 0 && dna.isCenter) ? 6 : dna.branchFactor;
-        for (let i = 0; i < count; i++) {
-            ctx.save();
-            let baseRot = (count > 2) ? (i * (360/count)) : (i === 0 ? -angle : angle);
-            ctx.rotate((baseRot + sway) * Math.PI / 180);
-            grow(nextLen, angle, depth + 1);
-            ctx.restore();
+        ctx.save(); ctx.translate(0, -len);
+        const sway = Math.sin(time + depth * 0.5) * (angle * dna.sway);
+        for (let i = 0; i < 2; i++) {
+            ctx.save(); ctx.rotate(((i === 0 ? -angle : angle) + sway) * Math.PI / 180);
+            grow(len * dna.shrink, angle, depth + 1); ctx.restore();
         }
         ctx.restore();
     }
 
     function render() {
-        time = Date.now() * 0.0006; // さらに半分の速度
-        tapPulse *= 0.92; // タップ時の脈動を減衰
-        
+        time = Date.now() * 0.0006;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+        stars.forEach(s => { ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.05 + Math.sin(time + s.x)*0.05; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill(); });
         if(gameStarted) {
-            let baseLen = (level === 1) ? 2 : 12 + (level * 8);
-            const scale = Math.min(1.0, (h * 0.65) / (baseLen * 2.8));
-            ctx.save();
-            ctx.translate(w/2, dna.isCenter ? h/2 : h - 140);
-            grow(baseLen * scale, dna.angle, 0);
-            ctx.restore();
+            ctx.globalAlpha = 1.0;
+            let baseLen = 10 + (level * 8.5);
+            const scale = Math.min(1.0, (h * 0.6) / (baseLen * 2.6));
+            ctx.save(); ctx.translate(w/2, dna.isCenter ? h/2 : h - 140);
+            grow(baseLen * scale, dna.angle, 0); ctx.restore();
         }
         requestAnimationFrame(render);
     }
     window.addEventListener('resize', init);
-    init(); render(); updateUI();
+    init(); render();
 </script>
 </body>
 </html>
