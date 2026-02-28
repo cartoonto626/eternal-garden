@@ -3,94 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Eternal Garden: Gallery Edition</title>
+    <title>Eternal Garden: Elite Edition</title>
     <style>
         :root { --accent: #00ffcc; }
-        body { margin: 0; background: #000; color: #fff; overflow: hidden; font-family: -apple-system, sans-serif; touch-action: none; }
-        canvas { display: block; filter: contrast(1.1) brightness(1.2) saturate(1.2); }
+        body { margin: 0; background: #000; color: #fff; overflow: hidden; font-family: 'Helvetica Neue', Arial, sans-serif; touch-action: none; }
+        canvas { display: block; filter: contrast(1.1) brightness(1.2) saturate(1.3); }
 
         /* スタート画面 */
         #overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 2000; transition: opacity 1.2s;
+            z-index: 3000; transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
         #overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        .logo-circle { width: 80px; height: 80px; border: 1px solid var(--accent); border-radius: 50%; animation: pulse 4s infinite; }
+        .logo-circle { width: 60px; height: 60px; border: 1px solid var(--accent); border-radius: 50%; animation: pulse 4s infinite; }
 
         /* メインUI */
         #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; opacity: 0; transition: opacity 1s; }
         #ui.visible { opacity: 1; }
         .interactive { pointer-events: auto; }
 
-        .header {
-            position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            padding: 15px 25px; border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.1);
-            text-align: center; min-width: 240px;
+        /* スタイリッシュな1列ステータスバー */
+        .status-bar {
+            position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            padding: 8px 20px; border-radius: 30px; border: 0.5px solid rgba(255,255,255,0.15);
+            display: flex; align-items: center; gap: 15px; min-width: 280px; white-space: nowrap;
         }
-        #meta-info { font-size: 9px; letter-spacing: 2px; color: var(--accent); margin-bottom: 5px; opacity: 0.8; }
-        #title { margin: 0; font-size: 18px; letter-spacing: 4px; text-transform: uppercase; font-weight: 800; }
-        #exp-bar { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-top: 10px; }
-        #exp-fill { width: 0%; height: 100%; background: var(--accent); box-shadow: 0 0 12px var(--accent); transition: width 0.3s; }
+        .status-main { display: flex; flex-direction: column; align-items: flex-start; }
+        #meta-info { font-size: 8px; letter-spacing: 1px; color: var(--accent); opacity: 0.9; margin-bottom: 2px; }
+        #title { font-size: 14px; letter-spacing: 3px; font-weight: 800; text-transform: uppercase; }
+        .exp-container { flex-grow: 1; height: 2px; background: rgba(255,255,255,0.1); border-radius: 1px; position: relative; min-width: 80px; }
+        #exp-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); box-shadow: 0 0 10px var(--accent); transition: width 0.3s; }
 
-        /* 操作ボタン */
-        .controls { position: absolute; bottom: 40px; right: 20px; display: flex; flex-direction: column; gap: 15px; }
+        /* サイド・コントロール（誤操作防止のため右側に配置） */
+        .side-controls { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 20px; }
         .icon-btn { 
-            width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.1); 
-            backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 20px; 
-            display: flex; align-items: center; justify-content: center;
+            width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.08); 
+            backdrop-filter: blur(15px); border: 0.5px solid rgba(255,255,255,0.1); color: #fff; font-size: 18px; 
+            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
         }
-        #add-btn { background: var(--accent); color: #000; font-weight: bold; border: none; }
+        .icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
+        #add-btn { background: var(--accent); color: #000; border: none; font-weight: bold; }
 
-        /* コレクションページ（オーバーレイ） */
+        /* ギャラリー */
         #gallery-page {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            z-index: 1500; display: none; flex-direction: column; align-items: center; padding: 80px 20px;
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            z-index: 2000; display: none; flex-direction: column; align-items: center; padding: 100px 20px 40px;
         }
         #gallery-page.open { display: flex; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; max-height: 70vh; overflow-y: auto; }
-        .gallery-item { aspect-ratio: 1; border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); background-size: cover; background-position: center; }
-        .close-gallery { margin-top: 30px; padding: 10px 30px; border-radius: 20px; border: 1px solid #fff; background: none; color: #fff; font-size: 12px; letter-spacing: 2px; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; overflow-y: auto; padding-bottom: 40px; }
+        .gallery-item { aspect-ratio: 1; border-radius: 12px; border: 0.5px solid rgba(255,255,255,0.2); background-size: cover; background-position: center; }
+        .close-gallery { margin-top: auto; padding: 12px 40px; border-radius: 25px; border: 0.5px solid #fff; background: none; color: #fff; font-size: 11px; letter-spacing: 3px; }
 
         #rebirth-btn { 
-            position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
-            background: var(--accent); color: #000; border: none; padding: 12px 35px; border-radius: 25px;
-            font-size: 11px; font-weight: 900; letter-spacing: 2px; display: none; box-shadow: 0 0 20px var(--accent);
+            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background: var(--accent); color: #000; border: none; padding: 14px 40px; border-radius: 30px;
+            font-size: 11px; font-weight: 900; letter-spacing: 3px; display: none; box-shadow: 0 0 30px var(--accent);
         }
 
-        @keyframes pulse { 0%, 100% { transform: scale(0.9); opacity: 0.3; } 50% { transform: scale(1.1); opacity: 0.8; } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.3; } 50% { transform: scale(1.1); opacity: 0.7; } }
     </style>
 </head>
 <body>
 
 <div id="overlay" onclick="startGame()">
     <div class="logo-circle"></div>
-    <h0 style="margin-top:20px; letter-spacing:8px; font-weight:100;">Eternal Garden</h0>
-    <div style="font-size:9px; opacity:0.4; margin-top:40px; letter-spacing:4px;">TAP TO AWAKEN</div>
+    <div style="font-size:12px; letter-spacing:8px; margin-top:20px; font-weight:200;">ETERNAL GARDEN</div>
 </div>
 
 <div id="ui">
-    <div class="header">
-        <div id="meta-info">GEN 1 / STAGE 1 (BUFF x1.0)</div>
-        <div id="title">SEED</div>
-        <div id="exp-bar"><div id="exp-fill"></div></div>
+    <div class="status-bar">
+        <div class="status-main">
+            <div id="meta-info">G.1 / S.1 (x1.0)</div>
+            <div id="title">SEED</div>
+        </div>
+        <div class="exp-container"><div id="exp-fill"></div></div>
     </div>
 
-    <div class="controls">
-        <button class="icon-btn interactive" onclick="shareCanvas()">↑</button>
+    <div class="side-controls">
         <button id="add-btn" class="icon-btn interactive" onclick="addToCollection()">+</button>
         <button class="icon-btn interactive" onclick="toggleGallery()">𖡼</button>
+        <button class="icon-btn interactive" onclick="shareCanvas()">↑</button>
+        <button class="icon-btn interactive" onclick="location.reload()">↺</button>
     </div>
 
     <button id="rebirth-btn" class="interactive" onclick="triggerRebirth()">SUBLIMATE</button>
 </div>
 
 <div id="gallery-page" class="interactive">
-    <h2 style="letter-spacing:10px; font-weight:100; margin-bottom:40px;">ARCHIVE</h2>
+    <div style="font-size:10px; letter-spacing:10px; margin-bottom:30px; opacity:0.6;">COLLECTION</div>
     <div class="gallery-grid" id="gallery-grid"></div>
-    <button class="close-gallery" onclick="toggleGallery()">CLOSE</button>
+    <button class="close-gallery" onclick="toggleGallery()">RETURN</button>
 </div>
 
 <canvas id="canvas"></canvas>
@@ -115,8 +120,8 @@
             type: Math.floor(Math.random() * 5),
             color: colorBase,
             leafColor: Math.random() > 0.4 ? '#fff' : colorBase,
-            thickness: 4 + Math.random() * 6,
-            tilt: (Math.random() - 0.5) * 20
+            thickness: 5 + Math.random() * 5,
+            tilt: (Math.random() - 0.5) * 15
         };
         document.documentElement.style.setProperty('--accent', dna.color);
     }
@@ -131,7 +136,7 @@
     window.addEventListener('touchstart', e => {
         if(!gameStarted || galleryPage.classList.contains('open')) return;
         if(level < 20) {
-            exp += (18 / Math.log2(level + 2)) * (1 + rebirth * 0.5);
+            exp += (20 / Math.log2(level + 2)) * (1 + rebirth * 0.5);
             if(exp >= 100) { level++; exp = 0; updateUI(); }
             expFill.style.width = Math.min(100, exp) + '%';
         }
@@ -139,7 +144,7 @@
 
     function updateUI() {
         const power = (1 + rebirth * 0.5).toFixed(1);
-        metaInfo.innerText = `GEN ${rebirth + 1} / STAGE ${level} (BUFF x${power})`;
+        metaInfo.innerText = `G.${rebirth + 1} / S.${level} (x${power})`;
         titleText.innerText = evolutionNames[Math.min(9, Math.floor((level-1)/2))];
         if(level >= 20) rebirthBtn.style.display = 'block';
     }
@@ -163,17 +168,13 @@
             document.documentElement.style.setProperty('--accent', dna.color);
             toggleGallery();
         };
-        galleryGrid.appendChild(item);
-        // 保存時にちょっとした視覚フィードバック
-        const btn = document.getElementById('add-btn');
-        btn.style.transform = 'scale(1.2)';
-        setTimeout(() => btn.style.transform = 'scale(1)', 200);
+        galleryGrid.insertBefore(item, galleryGrid.firstChild);
     }
 
     function shareCanvas() {
         const dataUrl = canvas.toDataURL('image/png');
         const link = document.createElement('a');
-        link.download = `EternalGarden_${Date.now()}.png`;
+        link.download = `Garden_${Date.now()}.png`;
         link.href = dataUrl; link.click();
     }
 
@@ -196,7 +197,7 @@
         ctx.beginPath();
         ctx.strokeStyle = (depth > level - 2) ? dna.leafColor : dna.color;
         ctx.lineWidth = Math.max(0.8, dna.thickness / (depth + 1));
-        ctx.globalAlpha = 1 - (depth / 14);
+        ctx.globalAlpha = 1 - (depth / 15);
         drawShape(len);
         ctx.stroke();
         const s = Math.sin(time + depth) * dna.sway;
@@ -212,7 +213,7 @@
             const baseLen = (h / 7) + (level * 6);
             const scale = Math.min(1, (h * 0.85) / (baseLen * 3.2));
             ctx.lineCap = 'round';
-            drawTree(w/2, h - 100, baseLen * scale, dna.tilt, 0);
+            drawTree(w/2, h - 80, baseLen * scale, dna.tilt, 0);
         }
         requestAnimationFrame(render);
     }
