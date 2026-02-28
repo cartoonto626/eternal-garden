@@ -3,31 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Eternal Garden: Genesis</title>
+    <title>Eternal Garden: Infinite Seeds</title>
     <style>
         :root { --accent: #00ffcc; --bg: #000; }
-        body { margin: 0; background: var(--bg); color: #fff; overflow: hidden; font-family: 'Inter', sans-serif; touch-action: none; }
+        body { margin: 0; background: var(--bg); color: #fff; overflow: hidden; font-family: 'Inter', 'Helvetica Neue', sans-serif; touch-action: none; }
         canvas { display: block; }
 
-        /* 導入スライド（日英併記） */
-        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; transition: 1s cubic-bezier(0.4, 0, 0.2, 1); text-align: center; padding: 0 40px; box-sizing: border-box; }
-        .hidden { opacity: 0; visibility: hidden; pointer-events: none; transform: scale(1.1); }
+        /* スライド（日英併記を完全復元） */
+        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; transition: 1.2s cubic-bezier(0.4, 0, 0.2, 1); text-align: center; padding: 0 40px; box-sizing: border-box; }
+        .hidden { opacity: 0; visibility: hidden; pointer-events: none; transform: translateY(-20px); }
         .logo-dot { width: 2px; height: 2px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 15px var(--accent); animation: pulse-dot 3s infinite; margin-bottom: 30px; }
         .slide-content h2 { font-size: 14px; letter-spacing: 10px; font-weight: 300; color: var(--accent); margin-bottom: 25px; text-transform: uppercase; }
         .slide-content p { font-size: 11px; line-height: 2.5; opacity: 0.7; font-weight: 300; margin: 0; letter-spacing: 0.1em; }
-        .tap-hint { margin-top: 60px; font-size: 9px; letter-spacing: 5px; opacity: 0.4; animation: blink 3s infinite; }
+        .en-sub { display: block; font-size: 9px; opacity: 0.5; margin-top: 8px; letter-spacing: 0.05em; text-transform: uppercase; }
+        .tap-hint { margin-top: 60px; font-size: 9px; letter-spacing: 5px; opacity: 0.3; animation: blink 3s infinite; }
 
-        /* ステータスバー（スクリーンショット再現） */
+        /* UI */
         .status-bar { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 15px 35px; border-radius: 40px; border: 0.5px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; min-width: 260px; z-index: 100; opacity: 0; transition: 1.5s; }
-        #meta-info { font-size: 8px; letter-spacing: 2px; color: var(--accent); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; opacity: 0.8; }
+        #meta-info { font-size: 8px; letter-spacing: 2px; color: var(--accent); margin-bottom: 8px; font-weight: 600; text-transform: uppercase; }
         #title { font-size: 16px; letter-spacing: 8px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; }
-        .exp-container { width: 100%; height: 1.5px; background: rgba(255,255,255,0.1); position: relative; overflow: hidden; }
-        #exp-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); box-shadow: 0 0 15px var(--accent); transition: width 0.5s cubic-bezier(0.23, 1, 0.32, 1); }
+        .exp-container { width: 100%; height: 1.5px; background: rgba(255,255,255,0.1); position: relative; }
+        #exp-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); box-shadow: 0 0 15px var(--accent); transition: width 0.5s; }
 
-        /* 右側コントロールボタン */
         .side-controls { position: absolute; top: 55%; right: 25px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 20px; z-index: 100; opacity: 0; transition: 1s; }
-        .icon-btn { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); border: 0.5px solid rgba(255,255,255,0.12); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.3s; }
-        .icon-btn:active { transform: scale(0.85); background: rgba(255,255,255,0.2); }
+        .icon-btn { width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); border: 0.5px solid rgba(255,255,255,0.12); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; }
 
         #rebirth-btn { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); border: 1px solid var(--accent); color: var(--accent); padding: 16px 50px; border-radius: 40px; font-size: 11px; font-weight: 800; letter-spacing: 6px; display: none; z-index: 100; backdrop-filter: blur(10px); }
 
@@ -46,7 +45,8 @@
 <div id="slide1" class="overlay-layer hidden" onclick="showSlide(2)">
     <div class="slide-content">
         <h2>Genesis / 起源</h2>
-        <p>虚空に舞い降りた、一粒の光。<br>あなたの指先が、静寂を幾何学に変える。</p>
+        <p>虚空に舞い降りた、一粒の光。<br>あなたの指先が、静寂を幾何学に変える。
+        <span class="en-sub">A single drop of light in the void.<br>Your touch turns silence into geometry.</span></p>
     </div>
     <div class="tap-hint">NEXT</div>
 </div>
@@ -54,7 +54,8 @@
 <div id="slide2" class="overlay-layer hidden" onclick="startGame()">
     <div class="slide-content">
         <h2>System / 共生</h2>
-        <p>育ち、記録し、また昇華する。<br>二度と同じ形のない、一期一会の庭園へ。</p>
+        <p>育ち、記録し、また昇華する。<br>二度と同じ形のない、一期一会の庭園へ。
+        <span class="en-sub">Grow, record, and sublimate.<br>Step into a garden of once-in-a-lifetime forms.</span></p>
     </div>
     <div class="tap-hint">BEGIN</div>
 </div>
@@ -66,9 +67,9 @@
 </div>
 
 <div id="side-ui" class="side-controls">
-    <button class="icon-btn" onclick="effectTrigger()" title="Collect">+</button>
-    <button class="icon-btn" onclick="mutateStyle()" title="Mutation">⬢</button>
-    <button class="icon-btn" onclick="shareCanvas()" title="Share">↑</button>
+    <button class="icon-btn" onclick="alert('Collected!')" title="Collect">+</button>
+    <button class="icon-btn" onclick="mutateDNA()" title="Mutation">⬢</button>
+    <button class="icon-btn" onclick="share()" title="Share">↑</button>
     <button class="icon-btn" onclick="location.reload()" title="Reset">↺</button>
 </div>
 
@@ -86,14 +87,15 @@
 
     function generateDNA() {
         dna = {
-            angle: 15 + Math.random() * 50,
-            shrink: 0.65 + Math.random() * 0.15,
-            sway: 0.4 + Math.random() * 1.4,
-            thickness: 1.2 + Math.random() * 2.5,
+            angle: 15 + Math.random() * 55,
+            shrink: 0.6 + Math.random() * 0.2,
+            sway: 0.3 + Math.random() * 1.5,
+            thickness: 1.0 + Math.random() * 3.0,
             color: typeColors[Math.floor(Math.random() * typeColors.length)],
-            mode: Math.floor(Math.random() * 3), // 0:Line, 1:Circle, 2:Hex
-            asymmetry: (Math.random() - 0.5) * 8,
-            split: Math.random() > 0.85 ? 3 : 2 
+            mode: Math.floor(Math.random() * 4), // 0:Line, 1:Circle, 2:Hex, 3:Curve
+            asymmetry: (Math.random() - 0.5) * 12,
+            split: Math.random() > 0.8 ? 3 : 2,
+            ratio: 0.8 + Math.random() * 0.4 // 左右の枝の長さ比
         };
         document.documentElement.style.setProperty('--accent', dna.color);
     }
@@ -110,15 +112,14 @@
         setTimeout(() => { statusUi.style.opacity = sideUi.style.opacity = "1"; }, 500); 
     }
 
-    function mutateStyle() { dna.mode = (dna.mode + 1) % 3; }
-    function effectTrigger() { ctx.fillStyle = "rgba(255,255,255,0.2)"; ctx.fillRect(0,0,w,h); }
-    function shareCanvas() { if(navigator.share) navigator.share({title:'Eternal Garden', url:location.href}); else alert("Link Copied"); }
+    function mutateDNA() { generateDNA(); updateUI(); }
+    function share() { if(navigator.share) navigator.share({title:'Eternal Garden', url:location.href}); }
 
     window.addEventListener('touchstart', e => {
         if(!gameStarted || e.target.closest('button')) return;
         if(level < 20) {
             const buff = 1 + rebirth * 0.5;
-            exp += (58 / Math.sqrt(level)) * buff;
+            exp += (60 / Math.sqrt(level)) * buff;
             if(exp >= 100) { level++; exp = 0; updateUI(); }
             expFill.style.width = Math.min(100, exp) + '%';
         }
@@ -132,14 +133,11 @@
 
     function triggerRebirth() { rebirth++; level = 1; exp = 0; generateDNA(); updateUI(); }
 
-    function drawBranch(len, depth) {
-        if (dna.mode === 1) { // Circle
-            ctx.arc(0, -len/2, len/2.2, 0, Math.PI * 2);
-        } else if (dna.mode === 2) { // Hex
-            for(let i=0; i<6; i++) ctx.lineTo(Math.cos(i*Math.PI/3)*len/2.5, -len/2 + Math.sin(i*Math.PI/3)*len/2.5);
-        } else { // Line
-            ctx.moveTo(0, 0); ctx.lineTo(0, -len);
-        }
+    function drawBranch(len) {
+        if (dna.mode === 1) ctx.arc(0, -len/2, len/2.5, 0, Math.PI * 2);
+        else if (dna.mode === 2) { for(let i=0; i<6; i++) ctx.lineTo(Math.cos(i*Math.PI/3)*len/3, -len/2 + Math.sin(i*Math.PI/3)*len/3); }
+        else if (dna.mode === 3) ctx.quadraticCurveTo(len/3, -len/2, 0, -len);
+        else { ctx.moveTo(0, 0); ctx.lineTo(0, -len); }
     }
 
     function drawTree(len, angle, depth) {
@@ -147,15 +145,12 @@
         if (depth > maxDepth) return;
 
         ctx.beginPath();
-        ctx.lineWidth = Math.max(0.5, (dna.thickness * (1 - depth/maxDepth)) + (level/20));
+        ctx.lineWidth = Math.max(0.4, (dna.thickness * (1 - depth/maxDepth)) + (level/20));
         ctx.strokeStyle = dna.color;
         ctx.globalAlpha = Math.max(0.1, 1 - (depth / (maxDepth + 1)));
 
-        if(level === 1 && depth === 0) {
-            ctx.arc(0, 0, 1.8, 0, Math.PI*2); ctx.fill();
-        } else {
-            drawBranch(len, depth);
-        }
+        if(level === 1 && depth === 0) { ctx.arc(0, 0, 1.8, 0, Math.PI*2); ctx.fill(); }
+        else drawBranch(len);
         ctx.stroke();
 
         ctx.save();
@@ -166,8 +161,9 @@
         const branchAngles = dna.split === 3 ? [-angle, 0, angle] : [-angle, angle];
         branchAngles.forEach((a, i) => {
             ctx.save();
+            const sideRatio = (i === 0) ? dna.ratio : 1;
             ctx.rotate((a + sway + (i===0 ? -dna.asymmetry : dna.asymmetry)) * Math.PI / 180);
-            drawTree(nextLen, angle, depth + 1);
+            drawTree(nextLen * sideRatio, angle, depth + 1);
             ctx.restore();
         });
         ctx.restore();
@@ -177,10 +173,8 @@
         time = Date.now() * 0.0016;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         if(gameStarted) {
-            let baseLen = (level === 1) ? 2 : 12 + (level * 7.5);
-            // 画面外はみ出し防止の自動スケール（スクリーンショットのような収まりを維持）
+            let baseLen = (level === 1) ? 2 : 12 + (level * 7.8);
             const scaleFactor = (level < 4) ? 1 : Math.min(1.0, (h * 0.65) / (baseLen * 2.6));
-            
             ctx.save();
             ctx.translate(w/2, h - 140);
             drawTree(baseLen * scaleFactor, dna.angle, 0);
