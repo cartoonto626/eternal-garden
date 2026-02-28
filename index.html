@@ -3,35 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Eternal Garden: True Genesis</title>
+    <title>Eternal Garden: Gold Edition</title>
     <style>
         :root { --accent: #00ffcc; --bg: #000; }
         body { margin: 0; background: var(--bg); color: #fff; overflow: hidden; font-family: 'Inter', sans-serif; touch-action: none; }
-        canvas { display: block; }
+        canvas { display: block; filter: contrast(1.1) brightness(1.2); }
 
-        /* スタート画面（監督お気に入りのスタイルを維持） */
-        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; transition: 1s cubic-bezier(0.4, 0, 0.2, 1); text-align: center; padding: 0 40px; box-sizing: border-box; }
+        /* UI Layer */
+        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; transition: 1s; text-align: center; padding: 0 40px; box-sizing: border-box; }
         .hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         .logo-dot { width: 2px; height: 2px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 15px var(--accent); animation: pulse-dot 3s infinite; margin-bottom: 30px; }
-        .slide-content h2 { font-size: 13px; letter-spacing: 10px; font-weight: 200; color: var(--accent); margin-bottom: 25px; text-transform: uppercase; }
-        .slide-content p { font-size: 11px; line-height: 2.2; opacity: 0.6; font-weight: 300; margin: 0; letter-spacing: 0.1em; }
-        .tap-hint { margin-top: 60px; font-size: 8px; letter-spacing: 5px; opacity: 0.3; animation: blink 3s infinite; }
-
-        /* ステータスバー（倍率を復活） */
-        .status-bar { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 12px 28px; border-radius: 40px; border: 0.5px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; min-width: 220px; z-index: 100; opacity: 0; transition: 1s; }
-        #meta-info { font-size: 8px; letter-spacing: 2px; color: var(--accent); margin-bottom: 4px; font-weight: 600; }
-        #title { font-size: 12px; letter-spacing: 6px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; }
+        
+        .status-bar { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); padding: 12px 30px; border-radius: 40px; border: 0.5px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; align-items: center; min-width: 240px; z-index: 100; opacity: 0; transition: 1s; }
+        #meta-info { font-size: 8px; letter-spacing: 2px; color: var(--accent); margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
+        #title { font-size: 13px; letter-spacing: 6px; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; }
         .exp-container { width: 100%; height: 1px; background: rgba(255,255,255,0.1); position: relative; }
-        #exp-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); box-shadow: 0 0 10px var(--accent); transition: width 0.3s; }
+        #exp-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); box-shadow: 0 0 12px var(--accent); transition: width 0.3s; }
 
-        /* サイドボタン */
         .side-controls { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 20px; z-index: 100; opacity: 0; transition: 1s; }
-        .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 0.5px solid rgba(255,255,255,0.1); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .icon-btn { width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 0.5px solid rgba(255,255,255,0.1); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; }
 
-        #rebirth-btn { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: none; border: 1px solid var(--accent); color: var(--accent); padding: 12px 40px; border-radius: 30px; font-size: 10px; font-weight: 800; letter-spacing: 4px; display: none; z-index: 100; }
+        #rebirth-btn { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: none; border: 1px solid var(--accent); color: var(--accent); padding: 14px 45px; border-radius: 35px; font-size: 10px; font-weight: 800; letter-spacing: 5px; display: none; z-index: 100; backdrop-filter: blur(5px); }
 
-        @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(3); opacity: 1; } }
-        @keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.5; } }
+        @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 0.5; } 50% { transform: scale(3.5); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -39,23 +33,17 @@
 <div id="overlay" class="overlay-layer" onclick="showSlide(1)">
     <div class="logo-dot"></div>
     <div style="font-size:10px; letter-spacing:12px; font-weight:200;">ETERNAL GARDEN</div>
-    <div class="tap-hint">TAP TO AWAKEN</div>
+    <div style="margin-top:40px; font-size:8px; opacity:0.3; letter-spacing:5px;">TAP TO AWAKEN</div>
 </div>
 
 <div id="slide1" class="overlay-layer hidden" onclick="showSlide(2)">
-    <div class="slide-content">
-        <h2>Genesis / 起源</h2>
-        <p>虚空に舞い降りた、一粒の光。<br>あなたの指先が、静寂を幾何学に変える。</p>
-    </div>
-    <div class="tap-hint">NEXT</div>
+    <div style="font-size:13px; letter-spacing:10px; color:var(--accent); margin-bottom:25px;">GENESIS</div>
+    <p style="font-size:11px; line-height:2.2; opacity:0.6; font-weight:300;">虚空に舞い降りた、一粒の光。<br>あなたの指先が、静寂を幾何学に変える。</p>
 </div>
 
 <div id="slide2" class="overlay-layer hidden" onclick="startGame()">
-    <div class="slide-content">
-        <h2>System / 共生</h2>
-        <p>育ち、記録し、また昇華する。<br>二度と同じ形のない、一期一会の庭園へ。</p>
-    </div>
-    <div class="tap-hint">BEGIN</div>
+    <div style="font-size:13px; letter-spacing:10px; color:var(--accent); margin-bottom:25px;">SYSTEM</div>
+    <p style="font-size:11px; line-height:2.2; opacity:0.6; font-weight:300;">育ち、記録し、また昇華する。<br>二度と同じ形のない、一期一会の庭園へ。</p>
 </div>
 
 <div id="status-ui" class="status-bar">
@@ -78,19 +66,19 @@
     const expFill = document.getElementById('exp-fill'), titleText = document.getElementById('title'), metaInfo = document.getElementById('meta-info');
     const rebirthBtn = document.getElementById('rebirth-btn'), statusUi = document.getElementById('status-ui'), sideUi = document.getElementById('side-ui');
 
-    let w, h, time = 0, exp = 0, level = 1, rebirth = 0, dna = {}, gameStarted = false, scanEffect = 0;
+    let w, h, time = 0, exp = 0, level = 1, rebirth = 0, dna = {}, gameStarted = false, pulse = 0;
     const typeColors = ['#00ffcc', '#ff00ff', '#00ff88', '#ffff00', '#ff4d4d', '#4d79ff', '#ffffff'];
-    const names = ["Seed", "Pulse", "Sprout", "Bloom", "Network", "Radiant", "Ancient", "Galaxy", "Dimension", "Eternal"];
+    const names = ["Seed", "Pulse", "Sprout", "Bloom", "Network", "Radiant", "Ancient", "Galaxy", "Void", "Eternal"];
 
     function generateDNA() {
         const s = Math.random() * 1000;
         dna = {
-            angle: 15 + Math.random() * 45,
-            shrink: 0.65 + Math.random() * 0.12,
-            sway: 0.5 + Math.random() * 1.5,
-            thickness: 1 + Math.random() * 2,
+            angle: 18 + Math.random() * 42,
+            shrink: 0.7 + Math.random() * 0.1,
+            sway: 0.8 + Math.random() * 1.5,
+            thickness: 1.5 + Math.random() * 2,
             color: typeColors[Math.floor(Math.random() * typeColors.length)],
-            randomness: Math.random() * 5
+            variation: 0.95 + Math.random() * 0.1
         };
         document.documentElement.style.setProperty('--accent', dna.color);
     }
@@ -105,11 +93,13 @@
 
     window.addEventListener('touchstart', e => {
         if(!gameStarted || e.target.closest('button')) return;
-        scanEffect = 1.0;
+        pulse = 1.0;
         if(level < 20) {
-            exp += (60 / Math.pow(level, 0.4)) * (1 + rebirth * 0.5);
+            // バフ計算を復活
+            const buff = 1 + rebirth * 0.5;
+            exp += (55 / Math.sqrt(level)) * buff;
             if(exp >= 100) { level++; exp = 0; updateUI(); }
-            expFill.style.width = exp + '%';
+            expFill.style.width = Math.min(100, exp) + '%';
         }
     });
 
@@ -121,61 +111,63 @@
 
     function triggerRebirth() { rebirth++; level = 1; exp = 0; generateDNA(); updateUI(); }
 
-    function drawBranch(len, depth) {
-        // レベルに応じて「再帰の深さ」を制限し、初期を小さく保つ
-        const maxDepth = Math.min(depth, Math.floor(level / 1.8) + 1);
-        if (depth > maxDepth || depth > 12) return;
+    function drawTree(len, angle, depth) {
+        // 前回の好評だった成長感：レベルに合わせて再帰深度を段階的に解放
+        const maxDepth = Math.min(11, Math.floor(level / 1.6) + 2);
+        if (depth > maxDepth) return;
 
         ctx.beginPath();
-        ctx.lineWidth = Math.max(0.2, (dna.thickness * (1 - depth/maxDepth)) + (scanEffect * 2));
+        // 高レベルで線が消えないよう、levelに応じてベースの太さを補強
+        ctx.lineWidth = Math.max(0.3, (dna.thickness * (1 - depth/maxDepth)) + (level/15));
         ctx.strokeStyle = dna.color;
-        ctx.globalAlpha = Math.max(0.1, 1 - (depth / 13));
+        ctx.globalAlpha = Math.max(0.15, 1 - (depth / (maxDepth + 1)));
 
-        // ステージ1なら「粒」、それ以外なら「線」
+        // Stage 1 は絶対的な「粒」
         if(level === 1 && depth === 0) {
-            ctx.rect(-1, -1, 2, 2);
+            ctx.arc(0, 0, 1.5, 0, Math.PI*2);
+            ctx.fill();
         } else {
-            ctx.moveTo(0, 0); ctx.lineTo(0, -len);
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -len);
         }
         ctx.stroke();
 
         ctx.save();
         ctx.translate(0, -len);
         
-        const noise = Math.sin(time + depth) * dna.randomness;
-        const angle = (dna.angle + noise) * Math.PI / 180;
-        const nextLen = len * dna.shrink;
+        // 揺らぎと成長のランダム感
+        const swayForce = Math.sin(time + depth) * dna.sway;
+        const nextLen = len * dna.shrink * (depth === 0 ? 1 : dna.variation);
 
-        // 右の枝
-        ctx.save(); ctx.rotate(angle); drawBranch(nextLen, depth + 1); ctx.restore();
-        // 左の枝
-        ctx.save(); ctx.rotate(-angle); drawBranch(nextLen, depth + 1); ctx.restore();
+        // 枝分かれ（前回のロジックをベースに）
+        ctx.save(); ctx.rotate((angle + swayForce) * Math.PI / 180); drawTree(nextLen, angle, depth + 1); ctx.restore();
+        ctx.save(); ctx.rotate((-angle + swayForce) * Math.PI / 180); drawTree(nextLen, angle, depth + 1); ctx.restore();
         
         ctx.restore();
     }
 
     function render() {
-        time = Date.now() * 0.002;
+        time = Date.now() * 0.0018;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         
         if(gameStarted) {
-            // ステージ1のサイズを「2px」レベルへ。レベルが上がるほどベースも育つ
-            const baseLen = (level === 1) ? 2 : 10 + (level * 8);
-            // 常に画面に収まるよう調整。ただしステージ1では拡大せず「粒」を維持
-            const autoScale = (level === 1) ? 1 : Math.min(1.2, (h * 0.6) / (baseLen * 3));
+            // Stage 1 は極小、それ以降はダイナミックに
+            const baseLen = (level === 1) ? 2 : 12 + (level * 9);
+            // 常に中央で、かつ成長を阻害しないスケーリング
+            const autoScale = (level === 1) ? 1 : Math.min(1.1, (h * 0.75) / (baseLen * 2.8));
             
             ctx.save();
             ctx.translate(w/2, h - 120);
-            drawBranch(baseLen * autoScale, 0);
-            ctx.restore();
-
-            // 近未来スキャンライン
-            if(scanEffect > 0) {
-                ctx.strokeStyle = dna.color; ctx.lineWidth = 0.5; ctx.globalAlpha = scanEffect * 0.3;
-                const lineY = h - 120 - (scanEffect * h * 0.5);
-                ctx.beginPath(); ctx.moveTo(0, lineY); ctx.lineTo(w, lineY); ctx.stroke();
-                scanEffect -= 0.03;
+            
+            // タップ時の発光エフェクト
+            if(pulse > 0) {
+                ctx.shadowBlur = pulse * 20;
+                ctx.shadowColor = dna.color;
+                pulse -= 0.04;
             }
+            
+            drawTree(baseLen * autoScale, dna.angle, 0);
+            ctx.restore();
         }
         requestAnimationFrame(render);
     }
