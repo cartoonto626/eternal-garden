@@ -9,54 +9,70 @@
         body { margin: 0; background: #000; color: #fff; overflow: hidden; font-family: -apple-system, sans-serif; touch-action: none; }
         canvas { display: block; filter: contrast(1.1) brightness(1.2) saturate(1.2); }
 
-        /* UIレイヤー */
-        #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
+        /* 幻想的なスタート画面 */
+        #overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 1000; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .logo-circle { width: 80px; height: 80px; border: 1px solid var(--accent); border-radius: 50%; margin-bottom: 25px; animation: pulse 4s infinite; }
+        h0 { font-size: 20px; font-weight: 100; letter-spacing: 8px; color: var(--accent); text-transform: uppercase; text-shadow: 0 0 15px var(--accent); }
+        .start-hint { font-size: 9px; letter-spacing: 4px; opacity: 0.4; margin-top: 30px; text-transform: uppercase; animation: blink 2s infinite; }
+
+        /* ゲームUI */
+        #ui { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; opacity: 0; transition: opacity 1s; }
+        #ui.visible { opacity: 1; }
         .interactive { pointer-events: auto; }
 
-        /* メインヘッダー */
         .header {
-            position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(15px);
-            padding: 12px 20px; border-radius: 15px; border: 0.5px solid rgba(255,255,255,0.1);
-            text-align: center; min-width: 200px;
+            position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 12px 25px; border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.1);
+            text-align: center; min-width: 220px;
         }
-        #title { margin: 0; font-size: 16px; letter-spacing: 3px; text-transform: uppercase; font-weight: 800; }
-        #exp-bar { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-top: 8px; overflow: hidden; }
-        #exp-fill { width: 0%; height: 100%; background: var(--accent); box-shadow: 0 0 10px var(--accent); transition: width 0.3s; }
+        #title { margin: 0; font-size: 16px; letter-spacing: 4px; text-transform: uppercase; font-weight: 800; }
+        #exp-bar { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-top: 10px; overflow: hidden; }
+        #exp-fill { width: 0%; height: 100%; background: var(--accent); box-shadow: 0 0 12px var(--accent); transition: width 0.3s; }
 
-        /* 右上：シェア・メニュー */
-        .top-right { position: absolute; top: 50px; right: 20px; display: flex; flex-direction: column; gap: 15px; }
+        /* 右上：シェア・操作 */
+        .top-right { position: absolute; top: 60px; right: 20px; display: flex; flex-direction: column; gap: 15px; }
         .icon-btn { 
-            width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); 
+            width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.1); 
             backdrop-filter: blur(10px); border: none; color: #fff; font-size: 18px; 
             display: flex; align-items: center; justify-content: center;
         }
 
         /* 下部：コレクション */
         #collection-shelf {
-            position: absolute; bottom: 30px; left: 20px; right: 20px;
-            display: flex; gap: 10px; overflow-x: auto; padding: 10px 0;
-            mask-image: linear-gradient(to right, black 80%, transparent);
+            position: absolute; bottom: 40px; left: 20px; right: 20px;
+            display: flex; gap: 12px; overflow-x: auto; padding: 10px 0;
+            mask-image: linear-gradient(to right, black 85%, transparent);
         }
         .collection-item {
-            min-width: 50px; height: 50px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);
-            background-size: cover; flex-shrink: 0;
+            min-width: 55px; height: 55px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.2);
+            background-size: cover; background-position: center; flex-shrink: 0; transition: transform 0.2s;
         }
-        #add-collection { min-width: 50px; height: 50px; border-radius: 10px; background: var(--accent); color: #000; font-size: 24px; font-weight: bold; border: none; }
+        .collection-item:active { transform: scale(0.9); }
+        #add-collection { min-width: 55px; height: 55px; border-radius: 12px; background: var(--accent); color: #000; font-size: 28px; font-weight: bold; border: none; flex-shrink: 0; }
 
         #rebirth-btn { 
-            position: absolute; bottom: 110px; left: 50%; transform: translateX(-50%);
-            background: var(--accent); color: #000; border: none; padding: 10px 25px; border-radius: 20px;
-            font-size: 10px; font-weight: 900; letter-spacing: 2px; display: none;
+            position: absolute; bottom: 130px; left: 50%; transform: translateX(-50%);
+            background: var(--accent); color: #000; border: none; padding: 12px 30px; border-radius: 25px;
+            font-size: 11px; font-weight: 900; letter-spacing: 2px; display: none; box-shadow: 0 0 20px var(--accent);
         }
 
-        /* アニメーション */
-        @keyframes tapEffect { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.5); opacity: 0; } }
+        @keyframes pulse { 0%, 100% { transform: scale(0.9); opacity: 0.3; border-color: var(--accent); } 50% { transform: scale(1.1); opacity: 0.8; border-color: #fff; } }
+        @keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.6; } }
     </style>
 </head>
 <body>
 
-<canvas id="canvas"></canvas>
+<div id="overlay" onclick="startGame()">
+    <div class="logo-circle"></div>
+    <h0>Eternal Garden</h0>
+    <div class="start-hint">TAP TO ENTER</div>
+</div>
 
 <div id="ui">
     <div class="header">
@@ -73,30 +89,33 @@
 
     <div id="collection-shelf" class="interactive">
         <button id="add-collection" onclick="addToCollection()">+</button>
-        </div>
+    </div>
 </div>
+
+<canvas id="canvas"></canvas>
 
 <script>
     const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
     const expFill = document.getElementById('exp-fill'), titleText = document.getElementById('title');
     const rebirthBtn = document.getElementById('rebirth-btn'), shelf = document.getElementById('collection-shelf');
+    const overlay = document.getElementById('overlay'), ui = document.getElementById('ui');
 
-    let w, h, time = 0, exp = 0, level = 1, rebirth = 0, dna = {}, collection = [];
+    let w, h, time = 0, exp = 0, level = 1, rebirth = 0, dna = {}, gameStarted = false;
     const evolutionNames = ["Seed", "Sprout", "Sapling", "Bonsai", "Radiant", "Bloom", "Ancient", "Galaxy", "Void", "Eternal"];
     const typeColors = ['#00ffcc', '#ff00ff', '#00ff88', '#ffff00', '#ff4d4d', '#4d79ff', '#ffffff'];
 
     function generateUniqueDNA() {
-        const seed = Date.now() + Math.random(); // 究極のランダム性
+        const seed = Date.now() + Math.random();
         const colorBase = typeColors[Math.floor(Math.random() * typeColors.length)];
         dna = {
-            angle: 15 + (Math.sin(seed) * 0.5 + 0.5) * 50,
+            angle: 15 + (Math.sin(seed) * 0.5 + 0.5) * 55,
             shrink: 0.68 + (Math.cos(seed) * 0.5 + 0.5) * 0.12,
-            sway: 1 + Math.random() * 4,
+            sway: 1.5 + Math.random() * 4,
             type: Math.floor(Math.random() * 5),
             color: colorBase,
-            leafColor: Math.random() > 0.5 ? '#fff' : colorBase,
-            thickness: 2 + Math.random() * 8,
-            tilt: (Math.random() - 0.5) * 30
+            leafColor: Math.random() > 0.4 ? '#fff' : colorBase,
+            thickness: 3 + Math.random() * 7,
+            tilt: (Math.random() - 0.5) * 25
         };
         document.documentElement.style.setProperty('--accent', dna.color);
     }
@@ -106,12 +125,19 @@
         generateUniqueDNA();
     }
 
+    function startGame() { 
+        gameStarted = true; 
+        overlay.classList.add('hidden'); 
+        ui.classList.add('visible'); 
+    }
+
     window.addEventListener('touchstart', e => {
+        if(!gameStarted) return;
         e.preventDefault();
         if(level < 20) {
-            exp += (12 / Math.log2(level + 2)) * (1 + rebirth * 0.5);
+            exp += (15 / Math.log2(level + 2)) * (1 + rebirth * 0.5);
             if(exp >= 100) { level++; exp = 0; updateUI(); }
-            expFill.style.width = exp + '%';
+            expFill.style.width = Math.min(100, exp) + '%';
         }
     });
 
@@ -128,24 +154,27 @@
     }
 
     function addToCollection() {
-        const dataUrl = canvas.toDataURL('image/png', 0.1);
+        const dataUrl = canvas.toDataURL('image/png', 0.2);
         const item = document.createElement('div');
         item.className = 'collection-item';
         item.style.backgroundImage = `url(${dataUrl})`;
-        const currentDNA = JSON.parse(JSON.stringify(dna)); // DNAを保存
-        item.onclick = () => { dna = currentDNA; document.documentElement.style.setProperty('--accent', dna.color); };
+        const currentDNA = JSON.parse(JSON.stringify(dna));
+        item.onclick = () => { 
+            dna = currentDNA; 
+            document.documentElement.style.setProperty('--accent', dna.color); 
+        };
         shelf.appendChild(item);
     }
 
     function shareCanvas() {
         const dataUrl = canvas.toDataURL('image/png');
         const link = document.createElement('a');
-        link.download = `Garden_${Date.now()}.png`;
+        link.download = `EternalGarden_${Date.now()}.png`;
         link.href = dataUrl;
         link.click();
     }
 
-    function drawShape(len, depth) {
+    function drawShape(len) {
         const s = len * 0.3;
         if (dna.type === 1) ctx.arc(0, -len/2, len/2, 0, Math.PI*2);
         else if (dna.type === 2) { ctx.moveTo(0, -len); ctx.lineTo(s, 0); ctx.lineTo(-s, 0); ctx.closePath(); }
@@ -163,12 +192,11 @@
         ctx.rotate(angle * Math.PI / 180);
         ctx.beginPath();
         
-        // 色のロジック：深くなるほどdna.colorを維持
         ctx.strokeStyle = (depth > level - 2) ? dna.leafColor : dna.color;
-        ctx.lineWidth = Math.max(0.5, dna.thickness / (depth + 1));
+        ctx.lineWidth = Math.max(0.8, dna.thickness / (depth + 1));
         ctx.globalAlpha = 1 - (depth / 14);
         
-        drawShape(len, depth);
+        drawShape(len);
         ctx.stroke();
 
         const s = Math.sin(time + depth) * dna.sway;
@@ -181,11 +209,12 @@
         time = Date.now() * 0.002;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         
-        const baseLen = (h / 7) + (level * 6);
-        const scale = Math.min(1, (h * 0.85) / (baseLen * 3));
-        
-        ctx.lineCap = 'round';
-        drawTree(w/2, h - 80, baseLen * scale, dna.tilt, 0);
+        if(gameStarted) {
+            const baseLen = (h / 7) + (level * 6);
+            const scale = Math.min(1, (h * 0.85) / (baseLen * 3.2));
+            ctx.lineCap = 'round';
+            drawTree(w/2, h - 100, baseLen * scale, dna.tilt, 0);
+        }
         requestAnimationFrame(render);
     }
 
