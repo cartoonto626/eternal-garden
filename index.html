@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Eternal Garden: Chaos & Order</title>
+    <title>Eternal Garden: Serene Chaos</title>
     <style>
         :root { --accent: #00ffcc; --bg: #000; }
         body { margin: 0; background: var(--bg); color: #fff; overflow: hidden; font-family: 'Inter', sans-serif; touch-action: none; }
-        canvas { display: block; filter: contrast(1.3) brightness(1.1) saturate(1.4); }
+        canvas { display: block; filter: contrast(1.2) brightness(1.1); }
 
-        /* UI（日英併記・機能維持） */
-        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; transition: 1.5s cubic-bezier(0.19, 1, 0.22, 1); text-align: center; padding: 0 40px; box-sizing: border-box; }
-        .hidden { opacity: 0; visibility: hidden; pointer-events: none; transform: scale(1.2); }
-        .logo-dot { width: 2px; height: 2px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 25px var(--accent); animation: pulse-dot 3s infinite; margin-bottom: 30px; }
+        /* UI復元（日英併記・機能維持） */
+        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 3000; transition: 1.5s; text-align: center; padding: 0 40px; box-sizing: border-box; }
+        .hidden { opacity: 0; visibility: hidden; pointer-events: none; transform: scale(1.1); }
+        .logo-dot { width: 2px; height: 2px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 20px var(--accent); animation: pulse-dot 3s infinite; margin-bottom: 30px; }
         .slide-content h2 { font-size: 14px; letter-spacing: 12px; font-weight: 300; color: var(--accent); margin-bottom: 25px; text-transform: uppercase; }
         .slide-content p { font-size: 11px; line-height: 2.5; opacity: 0.7; font-weight: 300; margin: 0; letter-spacing: 0.1em; }
         .en-sub { display: block; font-size: 9px; opacity: 0.5; margin-top: 10px; text-transform: uppercase; }
@@ -26,8 +26,8 @@
         .side-controls { position: absolute; top: 55%; right: 25px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 20px; z-index: 100; opacity: 0; transition: 1s; }
         .icon-btn { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 0.5px solid rgba(255,255,255,0.15); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; backdrop-filter: blur(15px); }
 
-        #rebirth-btn { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1px solid var(--accent); color: var(--accent); padding: 16px 50px; border-radius: 40px; font-size: 11px; font-weight: 800; letter-spacing: 8px; display: none; z-index: 100; box-shadow: 0 0 20px rgba(0,255,204,0.2); }
-        @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(6); opacity: 1; } }
+        #rebirth-btn { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); border: 1px solid var(--accent); color: var(--accent); padding: 16px 50px; border-radius: 40px; font-size: 11px; font-weight: 800; letter-spacing: 8px; display: none; z-index: 100; }
+        @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 0.4; } 50% { transform: scale(5); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -60,7 +60,7 @@
 </div>
 
 <div id="side-ui" class="side-controls">
-    <button class="icon-btn" onclick="flash()">+</button>
+    <button class="icon-btn" onclick="mutateColor()">+</button>
     <button class="icon-btn" onclick="mutateChaos()">⬢</button>
     <button class="icon-btn" onclick="share()">↑</button>
     <button class="icon-btn" onclick="location.reload()">↺</button>
@@ -75,21 +75,20 @@
     const rebirthBtn = document.getElementById('rebirth-btn'), statusUi = document.getElementById('status-ui'), sideUi = document.getElementById('side-ui');
 
     let w, h, time = 0, exp = 0, level = 1, rebirth = 0, dna = {}, gameStarted = false;
-    const typeColors = ['#00ffcc', '#ff00ff', '#00ff88', '#ffff00', '#ff4d4d', '#4d79ff', '#ffffff', '#ff9900'];
+    const typeColors = ['#00ffcc', '#ff00ff', '#00ff88', '#ffff00', '#ff4d4d', '#4d79ff', '#ffffff'];
     const names = ["Seed", "Pulse", "Sprout", "Bloom", "Network", "Radiant", "Ancient", "Galaxy", "Void", "Eternal"];
 
     function generateDNA() {
         dna = {
-            base: Math.floor(Math.random() * 6), // 0-5の母体タイプ
-            angle: 10 + Math.random() * 80,
-            shrink: 0.45 + Math.random() * 0.45,
-            sway: Math.random() * 2.5,
+            base: Math.floor(Math.random() * 5),
+            angle: 15 + Math.random() * 60,
+            shrink: 0.5 + Math.random() * 0.3,
+            swayIntensity: 0.1 + Math.random() * 0.4, // 動きを大幅に抑制
             color: typeColors[Math.floor(Math.random() * typeColors.length)],
-            thickness: 0.3 + Math.random() * 3.5,
-            branchFactor: 1 + Math.floor(Math.random() * 3), // 枝分かれ数
-            chaosRatio: Math.random(), // 形が崩れる割合
-            rainbow: Math.random() > 0.8, // 虹色遺伝子
-            centerOriented: Math.random() > 0.5 
+            thickness: 0.8 + Math.random() * 2.0,
+            branchFactor: 2 + Math.floor(Math.random() * 2), 
+            asymmetry: (Math.random() - 0.5) * 30, // 形状の多様性
+            isCenter: Math.random() > 0.6
         };
         document.documentElement.style.setProperty('--accent', dna.color);
     }
@@ -98,14 +97,14 @@
     function showSlide(n) { document.querySelectorAll('.overlay-layer').forEach(el => el.classList.add('hidden')); if(n === 1) document.getElementById('slide1').classList.remove('hidden'); if(n === 2) document.getElementById('slide2').classList.remove('hidden'); }
     function startGame() { document.getElementById('slide2').classList.add('hidden'); gameStarted = true; setTimeout(() => { statusUi.style.opacity = sideUi.style.opacity = "1"; }, 500); }
 
-    function flash() { ctx.fillStyle = dna.color; ctx.globalAlpha = 0.3; ctx.fillRect(0,0,w,h); ctx.globalAlpha = 1; }
+    function mutateColor() { dna.color = typeColors[Math.floor(Math.random() * typeColors.length)]; document.documentElement.style.setProperty('--accent', dna.color); }
     function mutateChaos() { generateDNA(); updateUI(); }
     function share() { if(navigator.share) navigator.share({title:'Eternal Garden', url:location.href}); }
 
     window.addEventListener('touchstart', e => {
         if(!gameStarted || e.target.closest('button')) return;
         if(level < 20) {
-            exp += (68 / Math.sqrt(level)) * (1 + rebirth * 0.4);
+            exp += (65 / Math.sqrt(level)) * (1 + rebirth * 0.5);
             if(exp >= 100) { level++; exp = 0; updateUI(); }
             expFill.style.width = Math.min(100, exp) + '%';
         }
@@ -113,48 +112,48 @@
 
     function updateUI() {
         metaInfo.innerText = `G.${rebirth + 1} / S.${level}`;
-        titleText.innerText = names[Math.min( names.length-1, Math.floor((level-1)/2))].toUpperCase();
+        titleText.innerText = names[Math.min(9, Math.floor((level-1)/2))].toUpperCase();
         rebirthBtn.style.display = level >= 20 ? 'block' : 'none';
     }
 
     function triggerRebirth() { rebirth++; level = 1; exp = 0; generateDNA(); updateUI(); }
 
-    function drawPart(len, depth, maxD) {
+    function drawBranch(len, depth, maxD) {
         ctx.beginPath();
-        // 虹色遺伝子がある場合、深さで色を変える
-        ctx.strokeStyle = dna.rainbow ? `hsl(${(time*50 + depth*20)%360}, 100%, 70%)` : dna.color;
-        ctx.lineWidth = Math.max(0.2, dna.thickness * (1 - depth/maxD) + (level/45));
-        ctx.globalAlpha = Math.max(0.05, 1 - (depth/maxD));
+        ctx.strokeStyle = dna.color;
+        ctx.lineWidth = Math.max(0.4, dna.thickness * (1 - depth/maxD) + (level/35));
+        ctx.globalAlpha = Math.max(0.1, 1 - (depth/maxD));
 
-        const mode = (dna.chaosRatio > 0.6) ? Math.floor(Math.random()*4) : dna.base;
-        
-        if (mode === 1) ctx.arc(0, -len/2, Math.abs(len/3), 0, Math.PI*2);
-        else if (mode === 2) { ctx.rect(-len/4, -len, len/2, len/2); ctx.moveTo(0,0); ctx.lineTo(0,-len); }
-        else if (mode === 3) { ctx.moveTo(0,0); ctx.quadraticCurveTo(len*dna.chaosRatio, -len/2, 0, -len); }
-        else if (mode === 4) { for(let i=0; i<3; i++) { ctx.moveTo(-2,-len*(i/3)); ctx.lineTo(2,-len*(i/3)); } ctx.moveTo(0,0); ctx.lineTo(0,-len); }
-        else ctx.moveTo(0,0), ctx.lineTo(0, -len);
-        
+        const bt = dna.base;
+        if (bt === 1) { // Geometry
+            ctx.rect(-len/4, -len, len/2, len/2);
+        } else if (bt === 2) { // Circle
+            ctx.arc(0, -len/2, Math.abs(len/3), 0, 7);
+        } else if (bt === 3) { // Curvy
+            ctx.quadraticCurveTo(dna.asymmetry, -len/2, 0, -len);
+        } else {
+            ctx.moveTo(0,0); ctx.lineTo(0, -len);
+        }
         ctx.stroke();
     }
 
     function grow(len, angle, depth) {
-        const maxD = Math.min(12, Math.floor(level / 1.6) + 1);
+        const maxD = Math.min(11, Math.floor(level / 1.8) + 1);
         if (depth > maxD) return;
 
-        drawPart(len, depth, maxD);
+        drawBranch(len, depth, maxD);
 
         ctx.save();
         ctx.translate(0, -len);
-        const sway = Math.sin(time + depth) * dna.sway;
+        // 全体で統一された、呼吸のようなゆっくりした揺れ
+        const sway = Math.sin(time + depth * 0.2) * (angle * dna.swayIntensity);
         const nextLen = len * dna.shrink;
 
-        const branchCount = (depth === 0 && dna.centerOriented) ? 6 : dna.branchFactor + 1;
-        for (let i = 0; i < branchCount; i++) {
+        const count = (depth === 0 && dna.isCenter) ? 6 : dna.branchFactor;
+        for (let i = 0; i < count; i++) {
             ctx.save();
-            let rot = (branchCount > 3) ? (i * (360/branchCount)) : (i === 0 ? -angle : angle);
-            // カオス比率によるランダムな角度の歪み
-            const chaosAngle = (Math.random() - 0.5) * 40 * dna.chaosRatio;
-            ctx.rotate((rot + sway + chaosAngle) * Math.PI / 180);
+            let baseRot = (count > 2) ? (i * (360/count)) : (i === 0 ? -angle : angle);
+            ctx.rotate((baseRot + sway + (i === 0 ? -dna.asymmetry/5 : dna.asymmetry/5)) * Math.PI / 180);
             grow(nextLen, angle, depth + 1);
             ctx.restore();
         }
@@ -162,14 +161,13 @@
     }
 
     function render() {
-        time = Date.now() * 0.0022;
+        time = Date.now() * 0.0012; // アニメーション速度を落として優雅に
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         if(gameStarted) {
-            let baseLen = (level === 1) ? 2 : 12 + (level * 8.5);
-            const scale = Math.min(1.0, (h * 0.62) / (baseLen * 2.6));
+            let baseLen = (level === 1) ? 2 : 12 + (level * 8);
+            const scale = Math.min(1.0, (h * 0.65) / (baseLen * 2.8));
             ctx.save();
-            const yPos = dna.centerOriented ? h/2 : h - 140;
-            ctx.translate(w/2, yPos);
+            ctx.translate(w/2, dna.isCenter ? h/2 : h - 140);
             grow(baseLen * scale, dna.angle, 0);
             ctx.restore();
         }
