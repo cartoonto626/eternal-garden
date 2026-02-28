@@ -5,47 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-browser-capable" content="yes">
     <meta name="apple-mobile-web-browser-status-bar-style" content="black-translucent">
-    <title>Eternal Garden: Idle Evolution</title>
+    <title>Eternal Garden: Refined</title>
     <style>
         :root { --accent: #00ffcc; }
-        body { margin: 0; background: #000; color: #fff; overflow: hidden; font-family: -apple-system, sans-serif; touch-action: none; }
+        body { margin: 0; background: #000; color: #fff; overflow: hidden; font-family: 'Helvetica Neue', Arial, sans-serif; touch-action: none; }
         canvas { display: block; }
         
-        #ui { position: absolute; bottom: 50px; left: 0; width: 100%; text-align: center; pointer-events: none; z-index: 100; }
+        #ui { position: absolute; bottom: 60px; left: 0; width: 100%; text-align: center; pointer-events: none; z-index: 100; }
         .glass {
-            display: inline-block; background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            padding: 15px 30px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);
+            display: inline-block; background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            padding: 20px 30px; border-radius: 35px; border: 1px solid rgba(255,255,255,0.1);
+            min-width: 240px;
         }
-        #rebirth-info { font-size: 10px; color: #ffcc00; letter-spacing: 2px; margin-bottom: 5px; opacity: 0.8; }
-        #status { font-size: 11px; letter-spacing: 2px; color: var(--accent); margin-bottom: 4px; }
-        #title { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: 1px; }
+        #rebirth-info { font-size: 10px; color: #ffcc00; letter-spacing: 3px; margin-bottom: 8px; font-weight: bold; }
+        #status { font-size: 11px; letter-spacing: 2px; color: var(--accent); margin-bottom: 2px; opacity: 0.9; }
+        #title { margin: 5px 0 15px 0; font-size: 24px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 0 15px var(--accent); }
         
-        #exp-container { position: relative; width: 220px; height: 4px; background: rgba(255,255,255,0.1); margin: 15px auto; border-radius: 2px; }
-        #exp-fill { width: 0%; height: 100%; background: var(--accent); box-shadow: 0 0 15px var(--accent); transition: width 0.1s; }
-        #auto-grow-indicator { position: absolute; top: -15px; right: 0; font-size: 9px; opacity: 0.6; }
+        #exp-container { position: relative; width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 10px; }
+        #exp-fill { width: 0%; height: 100%; background: var(--accent); box-shadow: 0 0 15px var(--accent); transition: width 0.2s cubic-bezier(0.1, 0.5, 0.5, 1); border-radius: 10px; }
+        #stats-row { display: flex; justify-content: space-between; font-size: 9px; opacity: 0.6; padding: 0 5px; }
 
-        .btn-group { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+        .btn-group { display: flex; gap: 12px; justify-content: center; margin-top: 20px; }
         .btn {
-            pointer-events: auto; background: rgba(255,255,255,0.1); color: #fff;
-            border: 1px solid rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 15px;
-            font-size: 12px; font-weight: bold; transition: 0.3s;
+            pointer-events: auto; background: rgba(255,255,255,0.08); color: #fff;
+            border: 1px solid rgba(255,255,255,0.2); padding: 12px 24px; border-radius: 20px;
+            font-size: 11px; font-weight: bold; transition: all 0.3s;
         }
-        .btn:active { transform: scale(0.9); background: var(--accent); color: #000; }
-        #rebirth-btn { display: none; background: var(--accent); color: #000; border: none; }
+        .btn:active { transform: scale(0.9); background: var(--accent); color: #000; border-color: transparent; }
+        #rebirth-btn { display: none; background: var(--accent); color: #000; border: none; box-shadow: 0 0 20px var(--accent); }
     </style>
 </head>
 <body>
 
 <div id="ui">
     <div class="glass">
-        <div id="rebirth-info">GENERATION: 1</div>
+        <div id="rebirth-info">GEN: 1</div>
         <div id="status">STAGE: 1</div>
         <h1 id="title">SEED</h1>
+        
         <div id="exp-container">
-            <div id="auto-grow-indicator">光合成中...</div>
             <div id="exp-fill"></div>
         </div>
+        <div id="stats-row">
+            <span id="multiplier">BUFF: x1.0</span>
+            <span id="auto-tag">光合成中...</span>
+        </div>
+
         <div class="btn-group">
             <button id="share-btn" class="btn" onclick="shareGarden()">SHARE</button>
             <button id="rebirth-btn" class="btn" onclick="triggerRebirth()">EVOLVE NEXT</button>
@@ -58,53 +64,46 @@
 <script>
     const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
     const expFill = document.getElementById('exp-fill'), statusText = document.getElementById('status'), titleText = document.getElementById('title');
-    const rebirthBtn = document.getElementById('rebirth-btn'), rebirthDisplay = document.getElementById('rebirth-info');
+    const rebirthBtn = document.getElementById('rebirth-btn'), rebirthDisplay = document.getElementById('rebirth-info'), multDisplay = document.getElementById('multiplier');
 
     let w, h, time = 0, exp = 0, level = 1, rebirth = 0;
-    let type = 'normal', stars = [], particles = [];
+    let stars = [], particles = [];
 
-    const evolutionNames = ["SEED", "SPROUT", "SAPLING", "YOUNG TREE", "BUSH", "FLOWERING", "FRUITING", "GREAT TREE", "ANCIENT", "ETERNAL"];
-    const typeColors = ['#ffffff', '#00ffcc', '#ff00ff', '#00ff88', '#ffff00'];
+    const evolutionNames = ["SEED", "SPROUT", "SAPLING", "YOUNG TREE", "BUSH", "FLOWERING", "FRUITING", "GREAT TREE", "ANCIENT", "ETERNAL GARDEN"];
+    const typeColors = ['#00ffcc', '#ff00ff', '#00ff88', '#ffff00', '#ffffff'];
 
     function init() {
         w = canvas.width = window.innerWidth;
         h = canvas.height = window.innerHeight;
-        stars = Array.from({length: 60}, () => ({ x: Math.random()*w, y: Math.random()*h, s: Math.random()*2 }));
+        stars = Array.from({length: 80}, () => ({ x: Math.random()*w, y: Math.random()*h, s: Math.random()*2, v: Math.random()*0.5 + 0.1 }));
     }
 
-    // タップによる成長
     window.addEventListener('touchstart', e => {
         e.preventDefault();
         if(level >= 20) return;
         
-        // 1タップの威力（転生で強化）
-        const power = 2 / Math.log2(level + 1) * (1 + rebirth * 0.5);
+        // 転生によるインフレ倍率
+        const multiplier = 1 + (rebirth * 0.8);
+        const power = (3 / Math.log2(level + 1)) * multiplier;
         grow(power);
         
-        // タップエフェクト
-        for(let i=0; i<5; i++) {
-            particles.push({x: e.touches[0].clientX, y: e.touches[0].clientY, a: Math.random()*Math.PI*2, s: Math.random()*3+1, l: 1});
+        for(let i=0; i<6; i++) {
+            particles.push({x: e.touches[0].clientX, y: e.touches[0].clientY, a: Math.random()*Math.PI*2, s: Math.random()*4+1, l: 1});
         }
     });
 
-    // 自動成長（光合成）
     setInterval(() => {
         if(level < 20) {
-            // 自動成長速度（レベルが上がると相対的に遅く感じる）
-            const autoPower = 0.2 * (1 + rebirth * 0.2);
+            const autoPower = 0.3 * (1 + rebirth * 0.5);
             grow(autoPower);
         }
     }, 100);
 
     function grow(amount) {
         exp += amount;
-        // 次のレベルへの必要量（レベルが上がるごとに増大）
-        const threshold = 100; 
-        if(exp >= threshold) {
+        if(exp >= 100) {
             if(level < 20) {
-                level++;
-                exp = 0;
-                updateUI();
+                level++; exp = 0; updateUI();
             }
         }
         expFill.style.width = Math.min(100, exp) + '%';
@@ -112,20 +111,20 @@
 
     function updateUI() {
         statusText.innerText = `STAGE: ${level}`;
-        titleText.innerText = evolutionNames[Math.floor((level-1)/2)] || "DIVINE TREE";
+        const nameIdx = Math.min(evolutionNames.length - 1, Math.floor((level-1)/2));
+        titleText.innerText = evolutionNames[nameIdx];
         
-        const colorIndex = (rebirth + Math.floor(level/5)) % typeColors.length;
-        const color = typeColors[colorIndex];
+        const color = typeColors[(rebirth + Math.floor(level/4)) % typeColors.length];
         document.documentElement.style.setProperty('--accent', color);
+        multDisplay.innerText = `BUFF: x${(1 + rebirth * 0.8).toFixed(1)}`;
         
         if(level >= 20) rebirthBtn.style.display = 'inline-block';
     }
 
     function triggerRebirth() {
-        rebirth++;
-        level = 1; exp = 0;
+        rebirth++; level = 1; exp = 0;
         rebirthBtn.style.display = 'none';
-        rebirthDisplay.innerText = `GENERATION: ${rebirth + 1}`;
+        rebirthDisplay.innerText = `GEN: ${rebirth + 1}`;
         updateUI();
     }
 
@@ -134,7 +133,7 @@
         ctx.save();
         ctx.beginPath();
         const color = getComputedStyle(document.documentElement).getPropertyValue('--accent');
-        ctx.strokeStyle = depth > level-1 ? color : "#fff";
+        ctx.strokeStyle = depth > (level-2) ? color : "#fff";
         ctx.lineWidth = width;
         ctx.globalAlpha = (Math.sin(time + depth)*0.1 + 0.9) * (1 - depth/22);
         
@@ -143,9 +142,8 @@
         ctx.moveTo(0, 0); ctx.lineTo(0, -len);
         ctx.stroke();
 
-        // 傾け機能を廃止し、ゆったりとした自然な揺れに変更
-        let branchAngle = 20 + Math.sin(time + depth * 0.5) * 5;
-        let shrink = 0.76;
+        let branchAngle = 18 + Math.sin(time + depth * 0.5) * 6;
+        let shrink = 0.77;
 
         drawTree(0, -len, len * shrink, branchAngle, width * 0.7, depth + 1);
         drawTree(0, -len, len * shrink, -branchAngle, width * 0.7, depth + 1);
@@ -153,18 +151,19 @@
     }
 
     function render() {
-        time = Date.now() * 0.001;
+        time = Date.now() * 0.0015;
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, w, h);
 
-        // 星
-        ctx.fillStyle = "#fff";
+        // 星々がステージに合わせて輝きを増す
         stars.forEach(s => {
-            ctx.globalAlpha = Math.sin(time + s.x) * 0.5 + 0.5;
+            s.y += s.v * (1 + rebirth * 0.2);
+            if(s.y > h) s.y = 0;
+            ctx.fillStyle = "#fff";
+            ctx.globalAlpha = (Math.sin(time + s.x) * 0.5 + 0.5) * 0.8;
             ctx.fillRect(s.x, s.y, s.s, s.s);
         });
 
-        // パーティクル
         particles.forEach((p, i) => {
             p.x += Math.cos(p.a) * p.s; p.y += Math.sin(p.a) * p.s; p.l -= 0.03;
             if(p.l <= 0) particles.splice(i, 1);
@@ -174,12 +173,12 @@
         });
 
         ctx.lineCap = 'round';
-        drawTree(w/2, h - 100, (h/15) + (level*6), 0, 10 - (level*0.3), 0);
+        drawTree(w/2, h - 120, (h/16) + (level*7), 0, 11 - (level*0.35), 0);
         requestAnimationFrame(render);
     }
 
     async function shareGarden() {
-        const text = `【Eternal Garden】第${rebirth+1}世代・STAGE ${level}。私の庭園は静かに成長を続けています。`;
+        const text = `【Eternal Garden】第${rebirth+1}世代。BUFF x${(1 + rebirth * 0.8).toFixed(1)} の力で、庭園はさらなる高みへ。`;
         if (navigator.share) await navigator.share({ title: 'Eternal Garden', text: text, url: window.location.href });
     }
 
