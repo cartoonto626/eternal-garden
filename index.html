@@ -3,72 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Eternal Garden: Infinity</title>
+    <title>Eternal Garden: Zen Genesis</title>
     <style>
-        :root { --accent: #00ffcc; }
-        body { margin: 0; background: #000; color: #fff; overflow: hidden; font-family: 'Helvetica Neue', sans-serif; touch-action: none; }
-        canvas { display: block; filter: contrast(1.1) brightness(1.2); }
+        :root { --accent: #00ffcc; --bg: #000; }
+        body { margin: 0; background: var(--bg); color: #fff; overflow: hidden; font-family: 'Inter', 'Helvetica Neue', 'Hiragino Kaku Gothic ProN', sans-serif; touch-action: none; }
+        canvas { display: block; filter: contrast(1.1) brightness(1.1); }
 
-        /* スタート画面 */
-        #overlay {
+        /* オーバーレイ共通 */
+        .overlay-layer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 3000; transition: opacity 1.5s ease;
+            background: radial-gradient(circle at center, rgba(20,20,20,0.8) 0%, #000 100%);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 3000; transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), transform 1s ease;
+            text-align: center; padding: 0 40px; box-sizing: border-box;
         }
-        #overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        .logo-circle { width: 50px; height: 50px; border: 1px solid var(--accent); border-radius: 50%; animation: pulse 4s infinite; }
+        .hidden { opacity: 0; visibility: hidden; pointer-events: none; transform: scale(1.05); }
 
-        /* スリム・ステータスバー */
+        /* 装飾 */
+        .logo-dot { width: 4px; height: 4px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 15px var(--accent); animation: pulse-dot 3s infinite; margin-bottom: 30px; }
+        .slide-content { max-width: 300px; }
+        .slide-content h2 { font-size: 14px; letter-spacing: 8px; font-weight: 200; color: var(--accent); margin-bottom: 30px; text-transform: uppercase; }
+        .slide-content p { font-size: 12px; line-height: 2.2; opacity: 0.7; font-weight: 300; margin: 0; letter-spacing: 0.05em; }
+        .en-sub { font-size: 9px; opacity: 0.4; margin-top: 15px !important; letter-spacing: 0.1em; line-height: 1.6; }
+        .tap-hint { margin-top: 60px; font-size: 8px; letter-spacing: 4px; opacity: 0.3; animation: blink 2.5s infinite; }
+
+        /* ゲームUI */
         .status-bar {
-            position: absolute; top: 55px; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            padding: 6px 18px; border-radius: 20px; border: 0.5px solid rgba(255,255,255,0.1);
-            display: flex; align-items: center; gap: 12px; min-width: 240px; z-index: 100; opacity: 0; transition: 1s;
+            position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            padding: 10px 24px; border-radius: 40px; border: 0.5px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center; gap: 20px; min-width: 280px; z-index: 100; opacity: 0; transition: 1.5s;
         }
         .status-main { display: flex; flex-direction: column; }
-        #meta-info { font-size: 7px; letter-spacing: 1px; color: var(--accent); opacity: 0.8; }
-        #title { font-size: 12px; letter-spacing: 4px; font-weight: 800; text-transform: uppercase; }
+        #meta-info { font-size: 7px; letter-spacing: 1.5px; color: var(--accent); opacity: 0.8; font-weight: 600; }
+        #title { font-size: 11px; letter-spacing: 5px; font-weight: 800; text-transform: uppercase; margin-top: 2px; }
         .exp-container { flex-grow: 1; height: 1px; background: rgba(255,255,255,0.1); position: relative; }
-        #exp-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); box-shadow: 0 0 8px var(--accent); transition: width 0.3s; }
+        #exp-fill { position: absolute; left: 0; top: 0; height: 100%; background: var(--accent); box-shadow: 0 0 10px var(--accent); transition: width 0.4s; }
 
-        /* サイドボタン（最小化） */
-        .side-controls { position: absolute; top: 55%; right: 15px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 18px; z-index: 100; opacity: 0; transition: 1s; }
+        /* サイド操作 */
+        .side-controls { position: absolute; top: 50%; right: 20px; transform: translateY(-50%); display: flex; flex-direction: column; gap: 22px; z-index: 100; opacity: 0; transition: 1.5s; }
         .icon-btn { 
-            width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.05); 
-            backdrop-filter: blur(10px); border: 0.5px solid rgba(255,255,255,0.1); color: #fff; font-size: 16px; 
-            display: flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.03); 
+            backdrop-filter: blur(15px); border: 0.5px solid rgba(255,255,255,0.1); color: #fff; font-size: 14px; 
+            display: flex; align-items: center; justify-content: center; transition: 0.3s;
         }
-        #add-btn { background: var(--accent); color: #000; border: none; font-size: 20px; }
+        .icon-btn:active { background: var(--accent); color: #000; }
+        #add-btn { border-color: var(--accent); color: var(--accent); }
 
-        /* ギャラリー */
         #gallery-page {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.92); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            z-index: 2000; display: none; flex-direction: column; align-items: center; padding: 100px 20px;
+            background: rgba(0,0,0,0.95); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            z-index: 4000; display: none; flex-direction: column; align-items: center; padding: 120px 30px;
         }
-        #gallery-page.open { display: flex; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; overflow-y: auto; }
-        .gallery-item { aspect-ratio: 1; border-radius: 10px; border: 0.5px solid rgba(255,255,255,0.1); background-size: cover; background-position: center; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; max-height: 60vh; overflow-y: auto; }
+        .gallery-item { aspect-ratio: 1; border-radius: 8px; border: 0.5px solid rgba(255,255,255,0.1); background-size: cover; background-position: center; }
 
         #rebirth-btn { 
-            position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%);
-            background: var(--accent); color: #000; border: none; padding: 12px 35px; border-radius: 25px;
-            font-size: 10px; font-weight: 900; letter-spacing: 3px; display: none; z-index: 100;
+            position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
+            background: none; border: 1px solid var(--accent); color: var(--accent); padding: 12px 40px; border-radius: 30px;
+            font-size: 9px; font-weight: 800; letter-spacing: 4px; display: none; z-index: 100; backdrop-filter: blur(10px);
         }
 
-        @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.2; } 50% { transform: scale(1.15); opacity: 0.5; } }
+        @keyframes pulse-dot { 0%, 100% { transform: scale(1); opacity: 0.5; box-shadow: 0 0 10px var(--accent); } 50% { transform: scale(1.5); opacity: 1; box-shadow: 0 0 25px var(--accent); } }
+        @keyframes blink { 0%, 100% { opacity: 0.1; } 50% { opacity: 0.4; } }
     </style>
 </head>
 <body>
 
-<div id="overlay" onclick="startGame()">
-    <div class="logo-circle"></div>
-    <div style="font-size:10px; letter-spacing:10px; margin-top:20px; font-weight:200; opacity:0.6;">ETERNAL GARDEN</div>
+<div id="overlay" class="overlay-layer" onclick="showSlide(1)">
+    <div class="logo-dot"></div>
+    <div style="font-size:11px; letter-spacing:12px; font-weight:200; opacity:0.8;">ETERNAL GARDEN</div>
+    <div class="tap-hint">TAP TO AWAKEN</div>
+</div>
+
+<div id="slide1" class="overlay-layer hidden" onclick="showSlide(2)">
+    <div class="slide-content">
+        <h2>Genesis</h2>
+        <p>虚空に舞い降りた、一粒の種。<br>あなたの指先が、静寂を光に変える。</p>
+        <p class="en-sub">A single seed in the void.<br>Your touch turns silence into light.</p>
+    </div>
+    <div class="tap-hint">NEXT</div>
+</div>
+
+<div id="slide2" class="overlay-layer hidden" onclick="startGame()">
+    <div class="slide-content">
+        <h2>Symbiosis</h2>
+        <p>育ち、枯れ、また昇華する。<br>二度と同じ形のない、一期一会の庭園へ。</p>
+        <p class="en-sub">Grow, fade, and sublimate.<br>Step into a garden of fleeting geometry.</p>
+    </div>
+    <div class="tap-hint">BEGIN</div>
 </div>
 
 <div id="status-ui" class="status-bar">
     <div class="status-main">
-        <div id="meta-info">G.1 / S.1 (x1.0)</div>
+        <div id="meta-info">GEN.1 / STG.1 (x1.0)</div>
         <div id="title">SEED</div>
     </div>
     <div class="exp-container"><div id="exp-fill"></div></div>
@@ -81,12 +109,12 @@
     <button class="icon-btn" onclick="location.reload()">↺</button>
 </div>
 
-<button id="rebirth-btn" onclick="triggerRebirth()">SUBLIMATE</button>
+<button id="rebirth-btn" onclick="triggerRebirth()">SUBLIMATE / 昇華</button>
 
 <div id="gallery-page">
-    <div style="font-size:9px; letter-spacing:10px; margin-bottom:30px; opacity:0.5;">ARCHIVE</div>
+    <div style="font-size:8px; letter-spacing:10px; margin-bottom:40px; opacity:0.4; text-transform:uppercase;">Archive / 記録</div>
     <div class="gallery-grid" id="gallery-grid"></div>
-    <button style="margin-top:40px; background:none; border:0.5px solid #fff; color:#fff; padding:10px 30px; border-radius:20px; font-size:10px;" onclick="toggleGallery()">BACK</button>
+    <button style="margin-top:50px; background:none; border:0.5px solid rgba(255,255,255,0.3); color:#fff; padding:12px 40px; border-radius:30px; font-size:9px; letter-spacing:2px;" onclick="toggleGallery()">CLOSE</button>
 </div>
 
 <canvas id="canvas"></canvas>
@@ -94,8 +122,7 @@
 <script>
     const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
     const expFill = document.getElementById('exp-fill'), titleText = document.getElementById('title'), metaInfo = document.getElementById('meta-info');
-    const rebirthBtn = document.getElementById('rebirth-btn'), overlay = document.getElementById('overlay');
-    const statusUi = document.getElementById('status-ui'), sideUi = document.getElementById('side-ui');
+    const rebirthBtn = document.getElementById('rebirth-btn'), statusUi = document.getElementById('status-ui'), sideUi = document.getElementById('side-ui');
     const galleryPage = document.getElementById('gallery-page'), galleryGrid = document.getElementById('gallery-grid');
 
     let w, h, time = 0, exp = 0, level = 1, rebirth = 0, dna = {}, gameStarted = false;
@@ -107,12 +134,12 @@
         dna = {
             angle: 15 + (Math.sin(seed) * 0.5 + 0.5) * 55,
             shrink: 0.68 + (Math.cos(seed) * 0.5 + 0.5) * 0.12,
-            sway: 1.5 + Math.random() * 4,
+            sway: 1.2 + Math.random() * 3,
             type: Math.floor(Math.random() * 5),
             color: typeColors[Math.floor(Math.random() * typeColors.length)],
             leafColor: Math.random() > 0.4 ? '#fff' : '#00ffcc',
-            thickness: 4 + Math.random() * 4,
-            tilt: (Math.random() - 0.5) * 12
+            thickness: 3 + Math.random() * 5,
+            tilt: (Math.random() - 0.5) * 10
         };
         document.documentElement.style.setProperty('--accent', dna.color);
     }
@@ -122,15 +149,24 @@
         generateUniqueDNA();
     }
 
+    function showSlide(num) {
+        document.getElementById('overlay').classList.add('hidden');
+        document.getElementById('slide1').classList.add('hidden');
+        document.getElementById('slide2').classList.add('hidden');
+        if(num === 1) document.getElementById('slide1').classList.remove('hidden');
+        if(num === 2) document.getElementById('slide2').classList.remove('hidden');
+    }
+
     function startGame() { 
-        gameStarted = true; overlay.classList.add('hidden'); 
-        statusUi.style.opacity = "1"; sideUi.style.opacity = "1";
+        document.getElementById('slide2').classList.add('hidden');
+        gameStarted = true; 
+        setTimeout(() => { statusUi.style.opacity = "1"; sideUi.style.opacity = "1"; }, 500);
     }
 
     window.addEventListener('touchstart', e => {
         if(!gameStarted || galleryPage.style.display === 'flex' || e.target.closest('button')) return;
         if(level < 20) {
-            exp += (22 / Math.log2(level + 2)) * (1 + rebirth * 0.5);
+            exp += (28 / Math.log2(level + 3)) * (1 + rebirth * 0.4);
             if(exp >= 100) { level++; exp = 0; updateUI(); }
             expFill.style.width = Math.min(100, exp) + '%';
         }
@@ -138,7 +174,7 @@
 
     function updateUI() {
         const power = (1 + rebirth * 0.5).toFixed(1);
-        metaInfo.innerText = `G.${rebirth + 1} / S.${level} (x${power})`;
+        metaInfo.innerText = `GEN.${rebirth + 1} / STG.${level} (x${power})`;
         titleText.innerText = evolutionNames[Math.min(9, Math.floor((level-1)/2))];
         rebirthBtn.style.display = level >= 20 ? 'block' : 'none';
     }
@@ -157,12 +193,12 @@
 
     function shareCanvas() {
         const link = document.createElement('a');
-        link.download = `Garden_${Date.now()}.png`;
+        link.download = `EternalGarden_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png'); link.click();
     }
 
     function drawShape(len) {
-        const s = len * 0.3;
+        const s = len * 0.35;
         if (dna.type === 1) ctx.arc(0, -len/2, len/2, 0, Math.PI*2);
         else if (dna.type === 2) { ctx.moveTo(0, -len); ctx.lineTo(s, 0); ctx.lineTo(-s, 0); ctx.closePath(); }
         else if (dna.type === 3) ctx.rect(-s/2, -len, s, s);
@@ -178,7 +214,7 @@
         ctx.translate(x, y); ctx.rotate(angle * Math.PI / 180);
         ctx.beginPath();
         ctx.strokeStyle = (depth > level - 2) ? dna.leafColor : dna.color;
-        ctx.lineWidth = Math.max(0.6, dna.thickness / (depth + 1));
+        ctx.lineWidth = Math.max(0.7, dna.thickness / (depth + 1));
         ctx.globalAlpha = 1 - (depth / 15);
         drawShape(len); ctx.stroke();
         const s = Math.sin(time + depth) * dna.sway;
@@ -188,14 +224,23 @@
     }
 
     function render() {
-        time = Date.now() * 0.002;
+        time = Date.now() * 0.0015;
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+        
         if(gameStarted) {
-            // SEEDのサイズを小さく(h/12)、成長幅を調整
-            const baseLen = (h / 12) + (level * 5);
-            // どんなに巨大化しても画面の80%に収まるように自動縮小
-            const autoScale = Math.min(1, (h * 0.8) / (baseLen * 3.5));
-            drawTree(w/2, h - 60, baseLen * autoScale, dna.tilt, 0);
+            // ステージ1はh/25という極小の「点」から
+            const baseLen = (h / 25) + (level * 7);
+            const autoScale = Math.min(1, (h * 0.75) / (baseLen * 3.8));
+            ctx.lineCap = 'round';
+            drawTree(w/2, h - 80, baseLen * autoScale, dna.tilt, 0);
+        } else {
+            // スライドの背後でかすかな光を漂わせる
+            ctx.globalAlpha = 0.2;
+            for(let i=0; i<5; i++) {
+                ctx.beginPath();
+                ctx.arc(w/2 + Math.cos(time+i)*100, h/2 + Math.sin(time*0.8+i)*100, 1, 0, Math.PI*2);
+                ctx.fillStyle = dna.color; ctx.fill();
+            }
         }
         requestAnimationFrame(render);
     }
