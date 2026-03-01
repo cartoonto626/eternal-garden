@@ -2,181 +2,227 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Eternal Garden</title>
-
-    <link rel="apple-touch-icon" href="icon.png">
-    <link rel="icon" type="image/png" href="icon.png">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Eternal Garden: Definitive</title>
     <style>
-        :root { --neon-color: #00ff7f; --sub-color: #00fa9a; }
-        body { margin: 0; background: #000; color: var(--neon-color); font-family: 'serif'; overflow: hidden; touch-action: none; }
-        canvas { display: block; position: absolute; top: 0; left: 0; filter: blur(0.5px) contrast(1.2); }
+        :root { --accent: #00ffcc; --bg: #000; }
+        body { margin: 0; background: var(--bg); color: #fff; overflow: hidden; font-family: 'Inter', -apple-system, sans-serif; touch-action: none; }
+        canvas { display: block; filter: contrast(1.1) brightness(1.1); transition: transform 0.1s; }
 
-        /* スタート画面：ENTER */
-        #start-screen {
-            position: fixed; width: 100%; height: 100%; background: #000; z-index: 200;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            transition: opacity 2s;
-        }
-        h1 { font-size: 2.2rem; letter-spacing: 0.5em; text-shadow: 0 0 20px var(--neon-color); margin-bottom: 40px; }
-        .enter-btn { 
-            background: none; border: 1px solid var(--neon-color); color: var(--neon-color);
-            padding: 15px 50px; font-size: 1.1rem; cursor: pointer; transition: 0.5s; letter-spacing: 0.2em;
-        }
+        /* --- UI レイアウト --- */
+        .status-bar { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 100; opacity: 0; transition: 1.5s; pointer-events: none; width: 80%; }
+        #title { font-size: 14px; letter-spacing: 12px; font-weight: 800; margin-bottom: 8px; text-transform: uppercase; text-indent: 12px; }
+        #meta-info { font-size: 8px; letter-spacing: 3px; opacity: 0.5; }
+        .exp-bar-container { width: 200px; height: 1px; background: rgba(255,255,255,0.1); margin: 15px auto; overflow: hidden; }
+        #exp-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); box-shadow: 0 0 10px var(--accent); }
+        
+        .ui-group-left { position: absolute; bottom: 40px; left: 25px; display: flex; flex-direction: column; gap: 20px; z-index: 200; opacity: 0; transition: 1s; }
+        .ui-group-right { position: absolute; bottom: 40px; right: 25px; display: flex; flex-direction: column; gap: 20px; z-index: 200; opacity: 0; transition: 1s; }
+        
+        .icon-btn { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.03); border: 0.5px solid rgba(255,255,255,0.15); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; backdrop-filter: blur(15px); -webkit-tap-highlight-color: transparent; outline: none; }
+        .icon-btn:active { background: rgba(255,255,255,0.1); transform: scale(0.9); }
 
-        /* 導入メッセージ：日本語と英語の重なり */
-        #intro-message {
-            position: fixed; width: 100%; top: 45%; text-align: center; z-index: 150;
-            pointer-events: none; opacity: 0; transition: opacity 2s;
-        }
-        .jp { font-size: 1.3rem; display: block; margin-bottom: 8px; letter-spacing: 0.1em; }
-        .en { font-size: 0.75rem; opacity: 0.6; letter-spacing: 0.25em; display: block; text-transform: uppercase; }
+        #rebirth-btn { position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 15px 40px; border-radius: 40px; font-size: 10px; font-weight: 800; letter-spacing: 6px; display: none; z-index: 300; backdrop-filter: blur(10px); animation: pulse-btn 2s infinite; }
 
-        /* ゲーム操作パネル：最初は隠す */
-        .ui-container { position: absolute; z-index: 100; opacity: 0; transition: opacity 2s; width: 100%; height: 100%; pointer-events: none; }
-        .ui-btn {
-            pointer-events: auto; background: rgba(0,0,0,0.4); border: 1px solid var(--neon-color); color: var(--neon-color);
-            width: 50px; height: 50px; border-radius: 50%; font-size: 1.2rem; display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 0 10px rgba(0,255,127,0.2);
-        }
-        .top-left { position: absolute; top: 30px; left: 20px; }
-        .top-right { position: absolute; top: 30px; right: 20px; display: flex; flex-direction: column; gap: 15px; }
+        /* --- パネル系 --- */
+        .full-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 6000; display: none; flex-direction: column; padding: 80px 40px; box-sizing: border-box; overflow-y: auto; }
+        .panel-header { font-size: 10px; letter-spacing: 8px; color: var(--accent); margin-bottom: 40px; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
+        .guide-item { margin-bottom: 30px; }
+        .guide-item h4 { font-size: 12px; color: var(--accent); margin: 0 0 8px 0; }
+        .guide-item p { font-size: 10px; line-height: 2; opacity: 0.6; margin: 0; }
+        .specimen-item { padding: 20px; background: rgba(255,255,255,0.03); border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 
-        /* 標本箱（アーカイブ） */
-        #archive-panel {
-            position: fixed; left: -100%; top: 0; width: 80%; max-width: 300px; height: 100%;
-            background: rgba(0, 10, 5, 0.98); border-right: 1px solid var(--neon-color);
-            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 300; padding: 30px 20px;
-        }
-        #archive-panel.open { left: 0; }
-        .archive-item { padding: 15px; border-bottom: 1px solid rgba(0,255,127,0.2); font-size: 0.9rem; }
+        /* --- 導入 --- */
+        .overlay-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 7000; transition: 2s ease; }
+        .hidden { opacity: 0; visibility: hidden; pointer-events: none; transform: scale(1.05); }
+
+        @keyframes pulse-btn { 0%, 100% { box-shadow: 0 0 10px rgba(0,255,204,0.1); } 50% { box-shadow: 0 0 25px rgba(0,255,204,0.3); } }
     </style>
 </head>
 <body>
 
-    <div id="start-screen">
-        <h1>ETERNAL GARDEN</h1>
-        <button class="enter-btn" onclick="startSequence()">ENTER</button>
+<div id="overlay" class="overlay-layer" onclick="startGame()">
+    <div style="width:2px; height:2px; background:var(--accent); box-shadow:0 0 20px var(--accent); margin-bottom:30px;"></div>
+    <div style="font-size:10px; letter-spacing:14px; font-weight:200;">ETERNAL GARDEN</div>
+</div>
+
+<div id="status-ui" class="status-bar">
+    <div id="title">SEED</div>
+    <div id="meta-info">GEN.1 / STEP.1 <span id="buff-val" style="margin-left:8px; opacity:0.4;">x1.0</span></div>
+    <div class="exp-bar-container"><div id="exp-fill"></div></div>
+</div>
+
+<div id="left-ui" class="ui-group-left">
+    <button class="icon-btn" onclick="openPanel('guide-page')">?</button>
+    <button class="icon-btn" onclick="openPanel('archive-page')">≡</button>
+</div>
+
+<div id="right-ui" class="ui-group-right">
+    <button class="icon-btn" onclick="nameAndSave()">+</button>
+    <button class="icon-btn" onclick="mutate()">⬢</button>
+    <button class="icon-btn" onclick="location.reload()">↺</button>
+</div>
+
+<button id="rebirth-btn" onclick="triggerRebirth()">SUBLIMATE / 昇華</button>
+
+<div id="guide-page" class="full-panel">
+    <div class="panel-header">Way of the Garden / 作法</div>
+    <div class="guide-item">
+        <h4>Birth / 誕生</h4>
+        <p>画面をタップして経験を蓄えます。レベルが上がるほど成長は重厚になります。<br>Tap the void. Growth demands more as you ascend.</p>
     </div>
-
-    <div id="intro-message">
-        <span class="jp">聖なる庭園へようこそ</span>
-        <span class="en">Welcome to the Sacred Grove</span>
-        <br><br>
-        <span class="jp">画面に触れ、命を育んでください</span>
-        <span class="en">Touch to nurture the digital life</span>
+    <div class="guide-item">
+        <h4>Specimen / 標本</h4>
+        <p>（+）で現在の姿を記録します。お気に入りの段階で時間を止めてください。<br>Use (+) to archive your current form at any stage.</p>
     </div>
-
-    <div id="ui-layer" class="ui-container">
-        <div class="top-left"><button class="ui-btn" onclick="toggleArchive()">≡</button></div>
-        <div class="top-right">
-            <button class="ui-btn" onclick="saveSpecimen()">＋</button>
-            <button class="ui-btn" onclick="resetGarden()">↺</button>
-        </div>
+    <div class="guide-item">
+        <h4>Sublimation / 昇華</h4>
+        <p>Lv.20で全てを捧げ、成長効率を永久に高めます。<br>Sacrifice all at Lv.20 to boost growth speed forever.</p>
     </div>
+    <div style="text-align:center; margin-top:30px; font-size:9px; opacity:0.3;" onclick="closePanel('guide-page')">CLOSE / 閉じる</div>
+</div>
 
-    <div id="archive-panel">
-        <h2 style="letter-spacing:0.3em; border-bottom:1px solid var(--neon-color);">ARCHIVE</h2>
-        <div id="archive-list"></div>
-        <button class="enter-btn" style="margin-top:20px; width:100%; padding:10px;" onclick="toggleArchive()">BACK</button>
-    </div>
+<div id="archive-page" class="full-panel">
+    <div class="panel-header">Specimens / 標本箱</div>
+    <div id="archive-list"></div>
+    <div style="text-align:center; margin-top:30px; font-size:9px; opacity:0.3;" onclick="closePanel('archive-page')">CLOSE / 閉じる</div>
+</div>
 
-    <canvas id="gardenCanvas"></canvas>
+<canvas id="canvas"></canvas>
 
-    <script>
-        const canvas = document.getElementById('gardenCanvas');
-        const ctx = canvas.getContext('2d');
-        let level = 1;
-        let specimens = JSON.parse(localStorage.getItem('garden_archive') || '[]');
+<script>
+    const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+    const expFill = document.getElementById('exp-fill'), rebirthBtn = document.getElementById('rebirth-btn');
+    
+    let w, h, time = 0, exp = 0, level = 1, rebirth = 0, dna = {}, gameStarted = false, archive = [], tapPulse = 0;
+    let stars = [];
 
-        function resize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            render();
-        }
-        window.addEventListener('resize', resize);
-        resize();
+    function generateDNA() {
+        dna = {
+            base: Math.floor(Math.random() * 4),
+            angle: 20 + Math.random() * 50,
+            shrink: 0.6 + Math.random() * 0.2,
+            sway: 0.04 + Math.random() * 0.05,
+            color: ['#00ffcc', '#ff00ff', '#00ff88', '#ffff00', '#ff4d4d', '#4d79ff', '#ffffff'][Math.floor(Math.random()*7)],
+            isCenter: Math.random() > 0.8
+        };
+        document.documentElement.style.setProperty('--accent', dna.color);
+    }
 
-        // --- 演出シーケンス ---
-        function startSequence() {
-            document.getElementById('start-screen').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('start-screen').style.display = 'none';
-                const intro = document.getElementById('intro-message');
-                intro.style.opacity = '1';
-                
-                setTimeout(() => {
-                    intro.style.opacity = '0';
-                    setTimeout(() => {
-                        document.getElementById('ui-layer').style.opacity = '1';
-                    }, 1500);
-                }, 4000);
-            }, 2000);
-        }
+    function init() { 
+        w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; 
+        generateDNA();
+        stars = Array(40).fill().map(() => ({ x: Math.random()*w, y: Math.random()*h, r: Math.random()*1.2 }));
+    }
 
-        // --- 庭園の核心ロジック（本来の複雑な描画を復元） ---
-        function drawOrganism(x, y, size, angle, depth, colorIdx) {
-            if (depth <= 0) return;
+    function startGame() { 
+        document.getElementById('overlay').classList.add('hidden'); 
+        gameStarted = true;
+        setTimeout(() => {
+            document.getElementById('status-ui').style.opacity = 1;
+            document.getElementById('left-ui').style.opacity = 1;
+            document.getElementById('right-ui').style.opacity = 1;
+        }, 800);
+    }
 
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.rotate(angle);
+    window.addEventListener('touchstart', e => {
+        if(!gameStarted || e.target.closest('button') || e.target.closest('.full-panel')) return;
+        if(level < 20) {
+            // 指数関数的な難易度設計
+            const difficulty = Math.pow(level, 1.25);
+            const boost = 1 + (rebirth * 0.5);
+            exp += (85 / difficulty) * boost;
             
-            // 監督が愛した独特のライン
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.quadraticCurveTo(size/4, -size/2, 0, -size);
-            ctx.strokeStyle = `rgba(0, 255, 127, ${0.3 + (depth/10)})`;
-            ctx.lineWidth = depth * 0.5;
-            ctx.stroke();
+            tapPulse = 1.0; // タップ時の脈動
 
-            // DNAのような螺旋的な広がり
-            const nextSize = size * 0.82;
-            drawOrganism(0, -size, nextSize, 0.4 + Math.sin(level * 0.1), depth - 1, colorIdx);
-            drawOrganism(0, -size, nextSize, -0.4 - Math.cos(level * 0.1), depth - 1, colorIdx);
-            
-            ctx.restore();
+            if(exp >= 100) {
+                level++; exp = 0;
+                ctx.fillStyle = dna.color; ctx.globalAlpha = 0.2; ctx.fillRect(0,0,w,h);
+                updateUI();
+            }
+            expFill.style.width = exp + '%';
         }
+    });
 
-        function render() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            // 根幹から命を描画
-            drawOrganism(canvas.width/2, canvas.height * 0.9, level * 5, 0, Math.min(level, 10), level);
+    function updateUI() {
+        document.getElementById('meta-info').innerHTML = `GEN.${rebirth + 1} / STEP.${level} <span style="margin-left:8px; opacity:0.4;">x${(1 + rebirth * 0.5).toFixed(1)}</span>`;
+        const names = ["Seed", "Pulse", "Sprout", "Bloom", "Network", "Radiant", "Ancient", "Galaxy", "Void", "Eternal"];
+        document.getElementById('title').innerText = names[Math.min(9, Math.floor((level-1)/2))].toUpperCase();
+        rebirthBtn.style.display = level >= 20 ? "block" : "none";
+    }
+
+    function nameAndSave() {
+        const n = prompt("この標本に名を刻む / Name this specimen", "");
+        if(n !== null) {
+            archive.push({ ...dna, level, label: n || "UNNAMED", time: new Date().toLocaleTimeString() });
+            alert("Archive saved.");
         }
+    }
 
-        canvas.addEventListener('touchstart', (e) => {
-            level++;
-            render();
+    function openPanel(id) {
+        document.getElementById(id).style.display = "flex";
+        if(id === 'archive-page') {
+            const list = document.getElementById('archive-list');
+            list.innerHTML = archive.length ? "" : "<p style='opacity:0.3; font-size:10px;'>No specimens found.</p>";
+            archive.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.className = 'specimen-item';
+                div.innerHTML = `<div><div style="font-size:12px; color:${item.color}">${item.label}</div><div style="font-size:8px; opacity:0.4;">STEP ${item.level} / ${item.time}</div></div>`;
+                div.onclick = () => { dna = {...item}; level = item.level; closePanel('archive-page'); updateUI(); };
+                list.appendChild(div);
+            });
+        }
+    }
+
+    function closePanel(id) { document.getElementById(id).style.display = "none"; }
+    function mutate() { generateDNA(); updateUI(); }
+    function triggerRebirth() { rebirth++; level = 1; exp = 0; generateDNA(); updateUI(); expFill.style.width = "0%"; }
+
+    function drawBranch(len, depth, maxD) {
+        ctx.beginPath(); ctx.strokeStyle = dna.color;
+        ctx.lineWidth = Math.max(0.4, (0.8 + tapPulse) * (1 - depth/maxD) + (level/50));
+        ctx.globalAlpha = Math.max(0.1, 0.8 - (depth/maxD * 0.7));
+        if (dna.base === 1) ctx.rect(-len/4, -len, len/2, len/2);
+        else if (dna.base === 2) ctx.arc(0, -len/2, Math.abs(len/5), 0, 7);
+        else { ctx.moveTo(0,0); ctx.lineTo(0, -len); }
+        ctx.stroke();
+    }
+
+    function grow(len, angle, depth) {
+        const maxD = Math.min(10, Math.floor(level / 2) + 1);
+        if (depth > maxD) return;
+        drawBranch(len, depth, maxD);
+        ctx.save(); ctx.translate(0, -len);
+        const sway = Math.sin(time + depth * 0.5) * (angle * dna.sway);
+        for (let i = 0; i < 2; i++) {
+            ctx.save(); ctx.rotate(((i === 0 ? -angle : angle) + sway) * Math.PI / 180);
+            grow(len * dna.shrink, angle, depth + 1); ctx.restore();
+        }
+        ctx.restore();
+    }
+
+    function render() {
+        time = Date.now() * 0.0006;
+        tapPulse *= 0.9;
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+        
+        stars.forEach(s => {
+            ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.05 + Math.sin(time + s.x)*0.03;
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 7); ctx.fill();
         });
 
-        // --- 機能：保存・読み込み ---
-        function saveSpecimen() {
-            const name = prompt("標本名 / Specimen Name");
-            if(name) {
-                specimens.push({ name, level });
-                localStorage.setItem('garden_archive', JSON.stringify(specimens));
-            }
+        if(gameStarted) {
+            ctx.globalAlpha = 1.0;
+            let baseLen = 10 + (level * 8.5);
+            const scale = Math.min(1.0, (h * 0.6) / (baseLen * 2.6));
+            ctx.save(); ctx.translate(w/2, dna.isCenter ? h/2 : h - 140);
+            grow(baseLen * scale, dna.angle, 0); ctx.restore();
         }
-        function toggleArchive() {
-            document.getElementById('archive-panel').classList.toggle('open');
-            if(document.getElementById('archive-panel').classList.contains('open')) {
-                const list = document.getElementById('archive-list');
-                list.innerHTML = specimens.map(s => `<div class="archive-item">${s.name} (Level ${s.level})</div>`).join('');
-            }
-        }
-        function resetGarden() { level = 1; render(); }
+        requestAnimationFrame(render);
+    }
 
-        // 初期描画ループ
-        function animate() {
-            render();
-            requestAnimationFrame(animate);
-        }
-        animate();
-    </script>
+    window.addEventListener('resize', init);
+    init(); render();
+</script>
 </body>
 </html>
