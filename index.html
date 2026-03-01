@@ -7,79 +7,82 @@
 
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <style>
-        :root { --neon-color: #00ff7f; }
+        :root { --neon-color: #00ff7f; --sub-color: #00fa9a; }
         body { margin: 0; background: #000; color: var(--neon-color); font-family: 'serif'; overflow: hidden; touch-action: none; }
-        canvas { display: block; position: absolute; top: 0; left: 0; }
+        canvas { display: block; position: absolute; top: 0; left: 0; filter: blur(0.5px) contrast(1.2); }
 
-        /* スタート画面 */
+        /* スタート画面：ENTER */
         #start-screen {
-            position: fixed; width: 100%; height: 100%; background: #000; z-index: 100;
+            position: fixed; width: 100%; height: 100%; background: #000; z-index: 200;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             transition: opacity 2s;
         }
-
         h1 { font-size: 2.2rem; letter-spacing: 0.5em; text-shadow: 0 0 20px var(--neon-color); margin-bottom: 40px; }
-        
         .enter-btn { 
             background: none; border: 1px solid var(--neon-color); color: var(--neon-color);
-            padding: 15px 50px; font-size: 1.1rem; cursor: pointer; transition: 0.5s;
+            padding: 15px 50px; font-size: 1.1rem; cursor: pointer; transition: 0.5s; letter-spacing: 0.2em;
         }
-        .enter-btn:hover { background: rgba(0, 255, 127, 0.2); box-shadow: 0 0 20px var(--neon-color); }
 
-        /* ENTER後の二言語メッセージ */
+        /* 導入メッセージ：日本語と英語の重なり */
         #intro-message {
-            position: fixed; width: 100%; text-align: center; z-index: 90;
+            position: fixed; width: 100%; top: 45%; text-align: center; z-index: 150;
             pointer-events: none; opacity: 0; transition: opacity 2s;
         }
-        .jp { font-size: 1.2rem; display: block; margin-bottom: 5px; }
-        .en { font-size: 0.7rem; opacity: 0.7; letter-spacing: 0.2em; display: block; }
+        .jp { font-size: 1.3rem; display: block; margin-bottom: 8px; letter-spacing: 0.1em; }
+        .en { font-size: 0.75rem; opacity: 0.6; letter-spacing: 0.25em; display: block; text-transform: uppercase; }
 
-        /* UIパネル */
-        .ui-panel { position: absolute; z-index: 10; opacity: 0; transition: opacity 2s; }
-        button.ui-btn {
-            background: rgba(0,0,0,0.5); border: 1px solid var(--neon-color); color: var(--neon-color);
-            width: 45px; height: 45px; border-radius: 50%; font-size: 1.2rem; margin: 10px;
+        /* ゲーム操作パネル：最初は隠す */
+        .ui-container { position: absolute; z-index: 100; opacity: 0; transition: opacity 2s; width: 100%; height: 100%; pointer-events: none; }
+        .ui-btn {
+            pointer-events: auto; background: rgba(0,0,0,0.4); border: 1px solid var(--neon-color); color: var(--neon-color);
+            width: 50px; height: 50px; border-radius: 50%; font-size: 1.2rem; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 10px rgba(0,255,127,0.2);
         }
+        .top-left { position: absolute; top: 30px; left: 20px; }
+        .top-right { position: absolute; top: 30px; right: 20px; display: flex; flex-direction: column; gap: 15px; }
 
+        /* 標本箱（アーカイブ） */
         #archive-panel {
-            position: fixed; left: -300px; top: 0; width: 260px; height: 100%;
-            background: rgba(0, 10, 5, 0.95); border-right: 1px solid var(--neon-color);
-            transition: 0.5s; z-index: 110; padding: 20px; overflow-y: auto;
+            position: fixed; left: -100%; top: 0; width: 80%; max-width: 300px; height: 100%;
+            background: rgba(0, 10, 5, 0.98); border-right: 1px solid var(--neon-color);
+            transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 300; padding: 30px 20px;
         }
         #archive-panel.open { left: 0; }
+        .archive-item { padding: 15px; border-bottom: 1px solid rgba(0,255,127,0.2); font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
     <div id="start-screen">
         <h1>ETERNAL GARDEN</h1>
-        <button class="enter-btn" onclick="beginExperience()">ENTER</button>
+        <button class="enter-btn" onclick="startSequence()">ENTER</button>
     </div>
 
     <div id="intro-message">
         <span class="jp">聖なる庭園へようこそ</span>
-        <span class="en">WELCOME TO THE SACRED GROVE</span>
-        <br>
+        <span class="en">Welcome to the Sacred Grove</span>
+        <br><br>
         <span class="jp">画面に触れ、命を育んでください</span>
-        <span class="en">TOUCH TO NURTURE THE DIGITAL LIFE</span>
+        <span class="en">Touch to nurture the digital life</span>
     </div>
 
-    <div id="ui-elements" class="ui-panel" style="width:100%;">
-        <div style="float:left; margin:20px;"><button class="ui-btn" onclick="toggleArchive()">≡</button></div>
-        <div style="float:right; margin:20px;">
+    <div id="ui-layer" class="ui-container">
+        <div class="top-left"><button class="ui-btn" onclick="toggleArchive()">≡</button></div>
+        <div class="top-right">
             <button class="ui-btn" onclick="saveSpecimen()">＋</button>
             <button class="ui-btn" onclick="resetGarden()">↺</button>
         </div>
     </div>
 
     <div id="archive-panel">
-        <h3>ARCHIVE</h3>
+        <h2 style="letter-spacing:0.3em; border-bottom:1px solid var(--neon-color);">ARCHIVE</h2>
         <div id="archive-list"></div>
-        <br><button class="enter-btn" style="padding:5px 15px;" onclick="toggleArchive()">CLOSE</button>
+        <button class="enter-btn" style="margin-top:20px; width:100%; padding:10px;" onclick="toggleArchive()">BACK</button>
     </div>
 
     <canvas id="gardenCanvas"></canvas>
@@ -93,87 +96,87 @@
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            drawGarden();
+            render();
         }
         window.addEventListener('resize', resize);
         resize();
 
-        // 演出開始
-        function beginExperience() {
+        // --- 演出シーケンス ---
+        function startSequence() {
             document.getElementById('start-screen').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('start-screen').style.display = 'none';
                 const intro = document.getElementById('intro-message');
                 intro.style.opacity = '1';
                 
-                // 数秒後にメッセージを消してUIを出す
                 setTimeout(() => {
                     intro.style.opacity = '0';
-                    document.getElementById('ui-elements').style.opacity = '1';
+                    setTimeout(() => {
+                        document.getElementById('ui-layer').style.opacity = '1';
+                    }, 1500);
                 }, 4000);
             }, 2000);
         }
 
-        // --- 樹の描画（成長・フラクタル機能） ---
-        function drawTree(x, y, len, angle, width) {
-            ctx.beginPath();
+        // --- 庭園の核心ロジック（本来の複雑な描画を復元） ---
+        function drawOrganism(x, y, size, angle, depth, colorIdx) {
+            if (depth <= 0) return;
+
             ctx.save();
-            ctx.strokeStyle = '#00ff7f';
-            ctx.lineWidth = width;
             ctx.translate(x, y);
-            ctx.rotate(angle * Math.PI / 180);
+            ctx.rotate(angle);
+            
+            // 監督が愛した独特のライン
+            ctx.beginPath();
             ctx.moveTo(0, 0);
-            ctx.lineTo(0, -len);
+            ctx.quadraticCurveTo(size/4, -size/2, 0, -size);
+            ctx.strokeStyle = `rgba(0, 255, 127, ${0.3 + (depth/10)})`;
+            ctx.lineWidth = depth * 0.5;
             ctx.stroke();
 
-            if (len < 5) { ctx.restore(); return; }
-
-            drawTree(0, -len, len * 0.8, angle + 25, width * 0.7);
-            drawTree(0, -len, len * 0.8, angle - 25, width * 0.7);
+            // DNAのような螺旋的な広がり
+            const nextSize = size * 0.82;
+            drawOrganism(0, -size, nextSize, 0.4 + Math.sin(level * 0.1), depth - 1, colorIdx);
+            drawOrganism(0, -size, nextSize, -0.4 - Math.cos(level * 0.1), depth - 1, colorIdx);
+            
             ctx.restore();
         }
 
-        function drawGarden() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawTree(canvas.width / 2, canvas.height * 0.9, level * 8, 0, 2);
+        function render() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // 根幹から命を描画
+            drawOrganism(canvas.width/2, canvas.height * 0.9, level * 5, 0, Math.min(level, 10), level);
         }
 
         canvas.addEventListener('touchstart', (e) => {
             level++;
-            drawGarden();
+            render();
         });
 
-        // --- 標本（アーカイブ）機能 ---
+        // --- 機能：保存・読み込み ---
         function saveSpecimen() {
-            const name = prompt("標本名を入力してください / Enter specimen name");
-            if (name) {
+            const name = prompt("標本名 / Specimen Name");
+            if(name) {
                 specimens.push({ name, level });
                 localStorage.setItem('garden_archive', JSON.stringify(specimens));
             }
         }
-
         function toggleArchive() {
-            const p = document.getElementById('archive-panel');
-            p.classList.toggle('open');
-            if(p.classList.contains('open')) updateArchiveList();
+            document.getElementById('archive-panel').classList.toggle('open');
+            if(document.getElementById('archive-panel').classList.contains('open')) {
+                const list = document.getElementById('archive-list');
+                list.innerHTML = specimens.map(s => `<div class="archive-item">${s.name} (Level ${s.level})</div>`).join('');
+            }
         }
+        function resetGarden() { level = 1; render(); }
 
-        function updateArchiveList() {
-            const list = document.getElementById('archive-list');
-            list.innerHTML = '';
-            specimens.forEach((s, i) => {
-                const item = document.createElement('div');
-                item.style.padding = "10px";
-                item.style.borderBottom = "1px solid #00ff7f44";
-                item.innerText = `${s.name} (Lv.${s.level})`;
-                item.onclick = () => { level = s.level; drawGarden(); toggleArchive(); };
-                list.appendChild(item);
-            });
+        // 初期描画ループ
+        function animate() {
+            render();
+            requestAnimationFrame(animate);
         }
-
-        function resetGarden() { level = 1; drawGarden(); }
-
-        drawGarden();
+        animate();
     </script>
 </body>
 </html>
